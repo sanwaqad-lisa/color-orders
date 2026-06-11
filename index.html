@@ -307,7 +307,9 @@ function buildNewForm(serial){
       f("שם לקוח",liveInput("clientName","הקלד שם לקוח")),
       f("שם פרויקט",liveInput("projectName","הקלד שם פרויקט")),
       f("שם מוצר",liveInput("productName","הקלד שם מוצר")),
-      f("מטרת המוצר",liveTextarea("productPurpose","תאר את מטרת המוצר"))
+      f("מטרת המוצר",liveTextarea("productPurpose","תאר את מטרת המוצר")),
+      f("כמות",liveInput("quantity","הקלד כמות...")),
+      f("מוצרים משלימים",liveInput("complementaryProducts","למשל: מכסה, משאבה, קולר..."))
     ),
     el("div",{className:"card"},
       el("div",{className:"card-title",style:{color:C.p2}},"צבע"),
@@ -330,7 +332,8 @@ function buildNewForm(serial){
       el("div",{className:"card-title",style:{color:C.p4}},"תכונות המוצר"),
       f("הברגה",liveInput("threading","פרט הברגה...")),
       f("גימור פני שטח",toggle("finish",["מבריק","מט","גומי"],C.p4)),
-      f("מרקם",toggle("flexibility",["גמיש","קשיח"],C.p4))
+      f("מרקם",toggle("flexibility",["גמיש","קשיח"],C.p4)),
+      f("הערות נוספות",liveTextarea("notes","הערות, דגשים מיוחדים..."))
     ),
     saveBtn
   );
@@ -451,6 +454,9 @@ function renderArchive(){
           el("div",{style:{fontWeight:600,color:"#f0f0f0"}},o.clientName+" — "+o.productName),
           el("div",{className:"order-meta"},o.serial+" · "+o.distributorName+" · "+(o.projectName||"")),
           el("div",{className:"order-meta"},formatDate(o.createdAt)+(o.pantonNumber?" · פנטון: "+o.pantonNumber:"")),
+          o.colorDescription?el("div",{style:{fontSize:12,color:"#555",marginTop:2}},"גוון: "+o.colorDescription):null,
+          o.pantonNumber?el("div",{style:{fontSize:12,color:"#555",marginTop:1}},"פנטון: "+o.pantonNumber):null,
+          o.pantonImage?el("img",{src:o.pantonImage,style:{maxHeight:"50px",borderRadius:"6px",border:"1px solid #e0e0e0",marginTop:"6px",display:"block"}}):null,
           o.colorSku?el("div",{style:{fontSize:12,color:C.success,marginTop:2}},"מק״ט: "+o.colorSku):null,
           (o.rejectReason||o.cancelReason)?el("div",{style:{fontSize:12,color:C.danger,marginTop:2}},"סיבה: "+(o.rejectReason||o.cancelReason)):null
         ),

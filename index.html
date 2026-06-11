@@ -8,20 +8,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:#1a1a2e;min-height:100vh;font-family:'Heebo',sans-serif;direction:rtl;color:#f0f0f0;}
+body{background:#f5f5f5;min-height:100vh;font-family:'Heebo',sans-serif;direction:rtl;color:#1a1a1a;}
 input,textarea,select,button{font-family:'Heebo',sans-serif;}
-::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#444;border-radius:2px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px;}
 a{color:#a78bfa;}
 
 .screen{padding:20px;max-width:560px;margin:0 auto;padding-bottom:48px;}
-.label{font-size:11px;font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.label{font-size:11px;font-weight:600;color:#666;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
 .field{margin-bottom:16px;}
 
-.input{width:100%;background:#0d0d1a;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-size:15px;outline:none;}
+.input{width:100%;background:#ffffff;border:1px solid #ccc;border-radius:8px;padding:10px 12px;color:#1a1a1a;font-size:15px;outline:none;}
 .input:focus{border-color:#a78bfa;}
 textarea.input{resize:vertical;}
 
-.card{background:#16213e;border-radius:12px;padding:18px;border:1px solid #2a2a4a;margin-bottom:14px;}
+.card{background:#ffffff;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-radius:12px;padding:18px;border:1px solid #e0e0e0;margin-bottom:14px;}
 .card-title{font-size:14px;font-weight:600;margin-bottom:14px;}
 
 .btn{padding:11px 22px;border-radius:10px;border:none;font-family:'Heebo';font-size:15px;font-weight:700;cursor:pointer;}
@@ -30,11 +30,11 @@ textarea.input{resize:vertical;}
 .btn-flex{flex:1;}
 
 .toggle-group{display:flex;gap:8px;flex-wrap:wrap;}
-.toggle-btn{padding:8px 18px;border-radius:8px;border:1px solid #444;background:transparent;color:#aaa;cursor:pointer;font-family:'Heebo';font-size:14px;}
+.toggle-btn{padding:8px 18px;border-radius:8px;border:1px solid #ccc;background:transparent;color:#666;cursor:pointer;font-family:'Heebo';font-size:14px;}
 .toggle-btn.active{font-weight:700;}
 
 .multi-group{display:flex;flex-wrap:wrap;gap:8px;}
-.multi-btn{padding:6px 13px;border-radius:6px;border:1px solid #444;background:transparent;color:#aaa;cursor:pointer;font-family:'Heebo';font-size:13px;}
+.multi-btn{padding:6px 13px;border-radius:6px;border:1px solid #ccc;background:transparent;color:#666;cursor:pointer;font-family:'Heebo';font-size:13px;}
 .multi-btn.active{border-color:#a78bfa;background:rgba(167,139,250,0.15);color:#a78bfa;font-weight:700;}
 
 .badge{border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;}
@@ -44,28 +44,28 @@ textarea.input{resize:vertical;}
 .nav-badge{border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#000;}
 
 .order-row{cursor:pointer;}
-.order-meta{font-size:12px;color:#aaa;margin-top:3px;}
+.order-meta{font-size:12px;color:#666;margin-top:3px;}
 .order-actions{display:flex;gap:10px;margin-top:14px;}
 
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
-.modal-box{background:#16213e;border-radius:14px;border:1px solid #2a2a4a;padding:24px;width:100%;max-width:400px;}
+.modal-box{background:#ffffff;border-radius:14px;border:1px solid #e0e0e0;padding:24px;width:100%;max-width:400px;}
 .modal-title{font-weight:700;font-size:17px;margin-bottom:18px;}
 
-.search-bar{width:100%;background:#0d0d1a;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-size:14px;outline:none;margin-bottom:14px;direction:rtl;}
+.search-bar{width:100%;background:#ffffff;border:1px solid #ccc;border-radius:8px;padding:10px 12px;color:#1a1a1a;font-size:14px;outline:none;margin-bottom:14px;direction:rtl;}
 .search-bar:focus{border-color:#a78bfa;}
 
 .tab-group{display:flex;gap:10px;margin-bottom:18px;}
-.tab-btn{flex:1;padding:11px;border-radius:10px;border:1px solid #444;background:transparent;color:#aaa;cursor:pointer;font-family:'Heebo';font-weight:700;font-size:14px;}
+.tab-btn{flex:1;padding:11px;border-radius:10px;border:1px solid #ccc;background:transparent;color:#666;cursor:pointer;font-family:'Heebo';font-weight:700;font-size:14px;}
 
 .header-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
-.back-btn{background:none;border:none;color:#aaa;cursor:pointer;font-size:22px;padding:0;line-height:1;}
+.back-btn{background:none;border:none;color:#666;cursor:pointer;font-size:22px;padding:0;line-height:1;}
 .screen-title{font-size:21px;font-weight:700;}
 .count-pill{margin-right:auto;border-radius:6px;padding:2px 10px;font-size:13px;}
-.empty{color:#aaa;text-align:center;padding:48px 20px;}
+.empty{color:#666;text-align:center;padding:48px 20px;}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.img-upload-label{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:#0d0d1a;border:1px dashed #444;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;margin-top:8px;}
-.panton-preview{margin-top:10px;max-height:80px;border-radius:8px;border:1px solid #444;}
-.sync-dot{font-size:12px;color:#aaa;}
+.img-upload-label{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:#ffffff;border:1px dashed #ccc;border-radius:8px;cursor:pointer;color:#666;font-size:13px;margin-top:8px;}
+.panton-preview{margin-top:10px;max-height:80px;border-radius:8px;border:1px solid #ccc;}
+.sync-dot{font-size:12px;color:#666;}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 </style>
@@ -171,13 +171,13 @@ function renderHome(){
 
   const navBtn=(icon,title,sub,color,screen,badge)=>el("button",{
     className:"nav-btn",
-    style:{background:`linear-gradient(135deg,${color}22,${color}0a)`,border:`1px solid ${color}44`},
+    style:{background:`linear-gradient(135deg,${color}15,${color}05)`,border:`1px solid ${color}44`},
     onClick:()=>{state.screen=screen;state.searchQ="";state.selectedId=null;formData={};render();}
   },
     el("div",{className:"nav-icon",style:{background:color+"25"}},icon),
     el("div",{style:{flex:1}},
       el("div",{style:{fontWeight:700,fontSize:16,color}},title),
-      el("div",{style:{fontSize:13,color:"#aaa",marginTop:2}},sub)
+      el("div",{style:{fontSize:13,color:"#666",marginTop:2}},sub)
     ),
     badge>0?el("div",{className:"nav-badge",style:{background:color}},badge):null
   );
@@ -193,7 +193,7 @@ function renderHome(){
         el("div",{style:{fontSize:13,color:"#888",marginTop:6,display:"flex",alignItems:"center",justifyContent:"center",gap:10}},
           el("span",{},state.orders.length+" הזמנות"),
           el("span",{id:"sync-dot",className:"sync-dot"},""),
-          APPS_SCRIPT_URL?el("button",{style:{background:"none",border:"1px solid #444",borderRadius:6,padding:"2px 10px",color:"#aaa",cursor:"pointer",fontFamily:"Heebo",fontSize:12},onClick:manualSync},"סנכרן"):null
+          APPS_SCRIPT_URL?el("button",{style:{background:"none",border:"1px solid #ccc",borderRadius:6,padding:"2px 10px",color:"#666",cursor:"pointer",fontFamily:"Heebo",fontSize:12},onClick:manualSync},"סנכרן"):null
         )
       ),
       navBtn("📋","פתיחת הזמנה","יצירת הזמנת צבע חדשה",C.p1,"new",0),
@@ -206,59 +206,8 @@ function renderHome(){
 
 // ── NEW ORDER — inputs use live DOM, no re-render on typing ──
 function renderNew(){
-  const serial=generateSerial();
-
-  // helpers that read/write formData without re-render
-  const liveInput=(key,placeholder)=>{
-    const inp=el("input",{className:"input",value:formData[key]||"",placeholder});
-    inp.addEventListener("input",e=>{formData[key]=e.target.value;});
-    return inp;
-  };
-  const liveTextarea=(key,placeholder)=>{
-    const ta=el("textarea",{className:"input",placeholder,rows:3},formData[key]||"");
-    ta.addEventListener("input",e=>{formData[key]=e.target.value;});
-    return ta;
-  };
-  const toggle=(key,options,color)=>el("div",{className:"toggle-group"},
-    ...options.map(opt=>el("button",{
-      className:"toggle-btn"+(formData[key]===opt?" active":""),
-      style:formData[key]===opt?{borderColor:color,background:color+"20",color}:{},
-      onClick:()=>{formData[key]=opt;refreshToggles();}
-    },opt))
-  );
-  const multi=(key,options)=>el("div",{className:"multi-group",id:"multi-"+key},
-    ...options.map(opt=>{
-      const arr=formData[key]||[];const sel=arr.includes(opt);
-      return el("button",{
-        className:"multi-btn"+(sel?" active":""),
-        onClick:()=>{formData[key]=sel?arr.filter(v=>v!==opt):[...arr,opt];refreshMulti(key,options);}
-      },opt);
-    })
-  );
-
-  function refreshToggles(){
-    // re-render only toggle/multi areas
-    const newDoc=buildNewForm(serial);
-    document.getElementById("toggles-area").replaceWith(newDoc.querySelector("#toggles-area"));
-  }
-  function refreshMulti(key){
-    const container=document.getElementById("multi-"+key);
-    if(!container)return;
-    const arr=formData[key]||[];
-    Array.from(container.children).forEach(btn=>{
-      const opt=btn.textContent;const sel=arr.includes(opt);
-      btn.className="multi-btn"+(sel?" active":"");
-      if(sel){btn.style.borderColor=C.p1;btn.style.background=C.p1+"20";btn.style.color=C.p1;}
-      else{btn.style.borderColor="";btn.style.background="";btn.style.color="";}
-    });
-    // show/hide OTHER input
-    const otherWrap=document.getElementById("other-material-wrap");
-    if(otherWrap)otherWrap.style.display=arr.includes("OTHER")?"block":"none";
-  }
-
-  return buildNewForm(serial);
+  return buildNewForm(generateSerial());
 }
-
 function buildNewForm(serial){
   const liveInput=(key,placeholder)=>{
     const inp=el("input",{className:"input",value:formData[key]||"",placeholder});
@@ -349,7 +298,7 @@ function buildNewForm(serial){
     el("div",{className:"card"},
       el("div",{className:"grid-2"},
         el("div",{},el("div",{className:"label"},"מספר סידורי"),el("div",{style:{color:C.p1,fontWeight:700,fontSize:16}},serial)),
-        el("div",{},el("div",{className:"label"},"תאריך פתיחה"),el("div",{style:{color:"#aaa",fontSize:14}},formatDate(new Date().toISOString())))
+        el("div",{},el("div",{className:"label"},"תאריך פתיחה"),el("div",{style:{color:"#666",fontSize:14}},formatDate(new Date().toISOString())))
       )
     ),
     el("div",{className:"card"},
@@ -404,7 +353,7 @@ function renderExecution(){
   if(list.length===0){wrap.appendChild(el("div",{className:"empty"},"אין הזמנות פתוחות"));return wrap;}
   list.forEach(o=>{
     const sel=state.selectedId===o.id;
-    const card=el("div",{className:"card order-row",style:{border:`1px solid ${sel?C.p2:"#2a2a4a"}`,marginBottom:10}});
+    const card=el("div",{className:"card order-row",style:{border:`1px solid ${sel?C.p2:"#e0e0e0"}`,marginBottom:10}});
     card.addEventListener("click",()=>{state.selectedId=sel?null:o.id;render();});
     card.append(
       el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
@@ -446,7 +395,7 @@ function renderApproval(){
   if(list.length===0){wrap.appendChild(el("div",{className:"empty"},"אין הזמנות ממתינות לאישור"));return wrap;}
   list.forEach(o=>{
     const sel=state.selectedId===o.id;
-    const card=el("div",{className:"card order-row",style:{border:`1px solid ${sel?C.p3:"#2a2a4a"}`,marginBottom:10}});
+    const card=el("div",{className:"card order-row",style:{border:`1px solid ${sel?C.p3:"#e0e0e0"}`,marginBottom:10}});
     card.addEventListener("click",()=>{state.selectedId=sel?null:o.id;render();});
     card.append(
       el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
@@ -524,7 +473,7 @@ function renderModal(){
   if(m.type==="done"){
     box.append(
       el("div",{className:"modal-title"},"אישור ביצוע"),
-      el("div",{style:{color:"#aaa",marginBottom:18,fontSize:14}},"ההזמנה תועבר לסטטוס \"ממתין לאישור לקוח\""),
+      el("div",{style:{color:"#666",marginBottom:18,fontSize:14}},"ההזמנה תועבר לסטטוס \"ממתין לאישור לקוח\""),
       el("div",{style:{display:"flex",gap:10}},
         btnEl("✓ אשר ביצוע",C.success,"#000",async()=>{updateOrder(m.order.id,{status:STATUS.PENDING});await syncOrder("update",getOrder(m.order.id));state.modal=null;state.selectedId=null;render();}),
         btnEl("חזור","transparent","#aaa",close,true)

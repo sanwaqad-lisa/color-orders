@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Color Orders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── RESET & BASE ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0F0F13;min-height:100vh;font-family:'Heebo',sans-serif;direction:rtl;color:#F0EFF8;}
+input,textarea,select,button{font-family:'Heebo',sans-serif;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:#0F0F13;}::-webkit-scrollbar-thumb{background:#2E2E3E;border-radius:2px;}
+a{color:#6B5CE7;}
+
+/* ── TOKENS ── */
+:root{
+  --bg:#0F0F13;--surface:#1A1A22;--border:#2E2E3E;
+  --text:#F0EFF8;--muted:#8A8AA8;--dim:#5A5A78;
+  --p1:#6B5CE7;--p2:#E7885C;--p3:#5CE7A8;--p4:#5CA8E7;
+  --danger:#E75C5C;--success:#5CE7A8;--warn:#E7C85C;
+}
+
+/* ── LAYOUT ── */
+#app{min-height:100vh;}
+.screen{padding:20px;max-width:600px;margin:0 auto;padding-bottom:48px;}
+
+/* ── TYPOGRAPHY ── */
+.screen-title{font-size:22px;font-weight:700;}
+.label{font-size:11px;font-weight:600;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.field{margin-bottom:18px;}
+
+/* ── INPUTS ── */
+.input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;transition:border .2s;}
+.input:focus{border-color:var(--p1);}
+textarea.input{resize:vertical;}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border-radius:14px;padding:20px;border:1px solid var(--border);margin-bottom:16px;}
+.card-title{font-size:14px;font-weight:600;margin-bottom:16px;}
+
+/* ── BUTTONS ── */
+.btn{padding:11px 24px;border-radius:10px;border:none;font-family:'Heebo';font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s,transform .1s;}
+.btn:active{transform:scale(0.98);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.btn-solid{background:var(--p1);color:#000;}
+.btn-outline{background:transparent;border:1px solid currentColor;}
+.btn-full{width:100%;font-size:16px;}
+.btn-flex{flex:1;}
+
+/* ── TOGGLE ── */
+.toggle-group{display:flex;gap:8px;}
+.toggle-btn{padding:8px 20px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'Heebo';font-size:14px;font-weight:400;transition:all .2s;}
+.toggle-btn.active{font-weight:700;}
+
+/* ── MULTI SELECT ── */
+.multi-group{display:flex;flex-wrap:wrap;gap:8px;}
+.multi-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'Heebo';font-size:13px;transition:all .2s;}
+.multi-btn.active{border-color:var(--p1);background:color-mix(in srgb,var(--p1) 13%,transparent);color:var(--p1);font-weight:700;}
+
+/* ── BADGES ── */
+.badge{border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;}
+
+/* ── HOME NAV BUTTONS ── */
+.nav-btn{width:100%;padding:20px 24px;border-radius:14px;border:none;cursor:pointer;display:flex;align-items:center;gap:16px;text-align:right;transition:transform .15s;font-family:'Heebo';}
+.nav-btn:hover{transform:scale(1.01);}
+.nav-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.nav-badge{border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#000;}
+
+/* ── ORDER ROWS ── */
+.order-row{cursor:pointer;transition:border .2s;}
+.order-row:hover{border-color:var(--muted)!important;}
+.order-meta{font-size:12px;color:var(--muted);margin-top:3px;}
+.order-actions{display:flex;gap:10px;margin-top:16px;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:#00000088;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-box{background:var(--surface);border-radius:16px;border:1px solid var(--border);padding:28px;width:100%;max-width:420px;animation:fadeIn .2s ease;}
+.modal-title{font-weight:700;font-size:18px;margin-bottom:20px;}
+
+/* ── SEARCH ── */
+.search-bar{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;margin-bottom:16px;direction:rtl;}
+.search-bar:focus{border-color:var(--p1);}
+
+/* ── SYNC STATUS ── */
+.sync-status{font-size:12px;display:flex;align-items:center;gap:6px;}
+.spinner{width:10px;height:10px;border-radius:50%;border:2px solid var(--warn);border-top-color:transparent;animation:spin .8s linear infinite;}
+
+/* ── TABS ── */
+.tab-group{display:flex;gap:10px;margin-bottom:20px;}
+.tab-btn{flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'Heebo';font-weight:700;font-size:15px;transition:all .2s;}
+
+/* ── PANTON IMAGE ── */
+.img-upload-label{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;cursor:pointer;color:var(--muted);font-size:13px;}
+.panton-preview{margin-top:10px;max-height:80px;border-radius:8px;border:1px solid var(--border);}
+
+/* ── EMPTY STATE ── */
+.empty{color:var(--muted);text-align:center;padding:48px 20px;}
+
+/* ── BACK BTN ── */
+.back-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;padding:0;line-height:1;}
+
+/* ── HEADER ROW ── */
+.header-row{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.count-pill{margin-right:auto;border-radius:6px;padding:2px 10px;font-size:13px;}
+
+/* ── ANIMATIONS ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── GRID ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  CONFIG — הכנס כאן את ה-URL לאחר פרסום Apps Script
+// ══════════════════════════════════════════════════
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1K28Yx31Sqtw-99rXztLP9PjIs9fo-pXpe4jywG58XtLF7D3JgaEm6TBdJ9KavAj4Sg/exec";  // ← הדבק Web App URL כאן
+
+// ── CONSTANTS ──────────────────────────────────────
+const STATUS = {
+  OPEN: "פתוח",
+  PENDING: "ממתין לאישור לקוח",
+  APPROVED: "מאושר",
+  REJECTED: "נדחה",
+  CANCELLED: "בוטל",
+};
+
+const RAW_MATERIALS = ["PE","PP","PET","PCR","TPE","PMMA","GLASS","ALUMINIUM","OTHER"];
+const STORAGE_KEY = "colorOrders_v3";
+const C = {
+  p1:"#6B5CE7",p2:"#E7885C",p3:"#5CE7A8",p4:"#5CA8E7",
+  danger:"#E75C5C",success:"#5CE7A8",warn:"#E7C85C",dim:"#5A5A78",muted:"#8A8AA8"
+};
+
+// ── STATE ───────────────────────────────────────────
+let state = {
+  screen: "home",
+  orders: [],
+  syncStatus: "idle",
+  modal: null,
+  selectedId: null,
+  archiveTab: "approved",
+  searchQ: "",
+  form: {},
+};
+
+// ── STORAGE ─────────────────────────────────────────
+function loadLocal(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]"); }catch{ return []; } }
+function saveLocal(o){ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(o)); }catch{} }
+
+// ── SHEETS API ───────────────────────────────────────
+async function sheetsPost(action,payload){
+  if(!APPS_SCRIPT_URL) return null;
+  try{
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method:"POST", redirect:"follow",
+      headers:{"Content-Type":"text/plain"},
+      body: JSON.stringify({action,...payload})
+    });
+    return await res.json();
+  }catch(e){ console.error(e); return null; }
+}
+
+async function sheetsGet(){
+  if(!APPS_SCRIPT_URL) return null;
+  try{
+    const res = await fetch(APPS_SCRIPT_URL+"?t="+Date.now(),{redirect:"follow"});
+    return await res.json();
+  }catch(e){ console.error(e); return null; }
+}
+
+async function syncOrder(action, order){
+  if(!APPS_SCRIPT_URL) return;
+  setSyncStatus("syncing");
+  const res = await sheetsPost(action,{order});
+  setSyncStatus(res?.success ? "ok" : "err");
+  setTimeout(()=>setSyncStatus("idle"),3000);
+}
+
+function setSyncStatus(s){ state.syncStatus=s; render(); }
+
+// ── HELPERS ─────────────────────────────────────────
+function generateSerial(){
+  const yr = new Date().getFullYear().toString().slice(-2);
+  const n  = String(state.orders.length+1).padStart(4,"0");
+  return `ORD-${yr}-${n}`;
+}
+
+function formatDate(iso){
+  if(!iso) return "";
+  return new Date(iso).toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+}
+
+function filterOrders(list, q){
+  if(!q) return list;
+  const lq = q.toLowerCase();
+  return list.filter(o=>[o.clientName,o.distributorName,o.projectName,o.productName,o.pantonNumber,o.serial,formatDate(o.createdAt)].some(v=>v&&v.toLowerCase().includes(lq)));
+}
+
+function getOrder(id){ return state.orders.find(o=>o.id===id); }
+
+function updateOrder(id, patch){
+  state.orders = state.orders.map(o=>o.id===id?{...o,...patch}:o);
+  saveLocal(state.orders);
+}
+
+// ── RENDER ENGINE ────────────────────────────────────
+function el(tag,props,...children){
+  const e = document.createElement(tag);
+  if(props) Object.entries(props).forEach(([k,v])=>{
+    if(k==="style"&&typeof v==="object") Object.assign(e.style,v);
+    else if(k.startsWith("on")&&typeof v==="function") e.addEventListener(k.slice(2).toLowerCase(),v);
+    else if(k==="className") e.className=v;
+    else if(k==="htmlFor") e.htmlFor=v;
+    else if(k==="checked") e.checked=v;
+    else e.setAttribute(k,v);
+  });
+  children.flat(Infinity).forEach(c=>{
+    if(c==null||c===false) return;
+    e.appendChild(typeof c==="string"||typeof c==="number" ? document.createTextNode(c) : c);
+  });
+  return e;
+}
+
+function render(){
+  const app = document.getElementById("app");
+  app.innerHTML="";
+  app.appendChild(renderScreen());
+  if(state.modal) app.appendChild(renderModal());
+}
+
+// ── SCREENS ──────────────────────────────────────────
+function renderScreen(){
+  switch(state.screen){
+    case "home":      return renderHome();
+    case "new":       return renderNew();
+    case "execution": return renderExecution();
+    case "approval":  return renderApproval();
+    case "archive":   return renderArchive();
+    default:          return renderHome();
+  }
+}
+
+// HOME
+function renderHome(){
+  const openCount   = state.orders.filter(o=>o.status===STATUS.OPEN).length;
+  const pendCount   = state.orders.filter(o=>o.status===STATUS.PENDING).length;
+
+  const syncEl = ()=>{
+    if(state.syncStatus==="idle") return null;
+    const map={syncing:{c:C.warn,t:"מסנכרן..."},ok:{c:C.success,t:"✓ סונכרן"},err:{c:C.danger,t:"⚠ שגיאה"}};
+    const s=map[state.syncStatus];
+    return el("div",{className:"sync-status",style:{color:s.c}},
+      state.syncStatus==="syncing"?el("div",{className:"spinner"}):null,s.t);
+  };
+
+  const navBtn=(icon,title,sub,color,screen,badge)=>{
+    const b = el("button",{
+      className:"nav-btn",
+      style:{background:`linear-gradient(135deg,${color}33,${color}11)`,border:`1px solid ${color}55`},
+      onClick:()=>{state.screen=screen;state.searchQ="";state.selectedId=null;render();}
+    },
+      el("div",{className:"nav-icon",style:{background:color+"33"}},icon),
+      el("div",{style:{flex:1}},
+        el("div",{style:{fontWeight:700,fontSize:17,color}},title),
+        el("div",{style:{fontSize:13,color:C.muted,marginTop:2}},sub)
+      ),
+      badge>0?el("div",{className:"nav-badge",style:{background:color}},badge):null
+    );
+    return b;
+  };
+
+  return el("div",{style:{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px"}},
+    el("div",{style:{width:"100%",maxWidth:400}},
+      // Header
+      el("div",{style:{textAlign:"center",marginBottom:48}},
+        el("div",{style:{fontSize:11,letterSpacing:4,color:C.dim,marginBottom:10,textTransform:"uppercase"}},"מערכת ניהול הזמנות"),
+        el("div",{style:{fontSize:32,fontWeight:700,letterSpacing:"-1px"}},
+          el("span",{style:{color:C.p1}},"Color"),
+          el("span",{}," Orders")
+        ),
+        el("div",{style:{fontSize:13,color:C.dim,marginTop:8,display:"flex",alignItems:"center",justifyContent:"center",gap:12}},
+          el("span",{},state.orders.length+" הזמנות"),
+          syncEl(),
+          APPS_SCRIPT_URL?el("button",{
+            style:{background:"none",border:"1px solid #2E2E3E",borderRadius:6,padding:"2px 10px",color:C.muted,cursor:"pointer",fontFamily:"Heebo",fontSize:12},
+            onClick:manualSync
+          },"סנכרן"):null
+        ),
+        !APPS_SCRIPT_URL?el("div",{style:{marginTop:10,fontSize:11,color:C.dim,background:"#1A1A22",borderRadius:8,padding:"6px 12px",display:"inline-block"}},"⚠ Google Sheets לא מחובר — מצב לוקאלי"):null
+      ),
+      // Nav
+      el("div",{style:{display:"flex",flexDirection:"column",gap:14}},
+        navBtn("📋","פתיחת הזמנה","יצירת הזמנת צבע חדשה",C.p1,"new",0),
+        navBtn("⚙️","סטטוס ביצוע","עדכון הזמנות פתוחות",C.p2,"execution",openCount),
+        navBtn("✅","אישור לקוח","הזמנות ממתינות לאישור",C.p3,"approval",pendCount),
+        navBtn("🗄️","ארכיון","הזמנות מאושרות ונדחות",C.p4,"archive",0)
+      ),
+      el("div",{style:{textAlign:"center",marginTop:40,fontSize:11,color:C.dim,letterSpacing:1}},
+        APPS_SCRIPT_URL?"GOOGLE SHEETS CONNECTED ✓":"LOCAL STORAGE MODE")
+    )
+  );
+}
+
+// NEW ORDER
+function renderNew(){
+  const f = state.form;
+
+  const input=(key,placeholder)=>el("input",{
+    className:"input",value:f[key]||"",placeholder,
+    onInput:e=>{state.form[key]=e.target.value;renderFieldOnly();}
+  });
+
+  const textarea=(key,placeholder)=>el("textarea",{
+    className:"input",placeholder,rows:3,
+    onInput:e=>{state.form[key]=e.target.value;}
+  },f[key]||"");
+
+  const toggle=(key,options,color)=>el("div",{className:"toggle-group"},
+    ...options.map(opt=>el("button",{
+      className:"toggle-btn"+(f[key]===opt?" active":""),
+      style:f[key]===opt?{borderColor:color,background:color+"22",color}:{},
+      onClick:()=>{state.form[key]=opt;render();}
+    },opt))
+  );
+
+  const multi=(key,options)=>el("div",{className:"multi-group"},
+    ...options.map(opt=>{
+      const arr=f[key]||[];
+      const sel=arr.includes(opt);
+      return el("button",{
+        className:"multi-btn"+(sel?" active":""),
+        onClick:()=>{
+          state.form[key]=sel?arr.filter(v=>v!==opt):[...arr,opt];
+          render();
+        }
+      },opt);
+    })
+  );
+
+  const field=(label,...content)=>el("div",{className:"field"},
+    el("div",{className:"label"},label),...content);
+
+  const serial = generateSerial();
+
+  const handleSave=async()=>{
+    if(!f.clientName||!f.productName) return;
+    const newOrder={...f,serial,createdAt:new Date().toISOString(),status:STATUS.OPEN,id:Date.now()};
+    state.orders=[...state.orders,newOrder];
+    saveLocal(state.orders);
+    await syncOrder("save",newOrder);
+    state.form={};
+    state.screen="home";
+    render();
+  };
+
+  return el("div",{className:"screen"},
+    el("div",{className:"header-row"},
+      el("button",{className:"back-btn",onClick:()=>{state.screen="home";state.form={};render();}},"←"),
+      el("div",{className:"screen-title"},"פתיחת הזמנה")
+    ),
+
+    // Auto fields
+    el("div",{className:"card"},
+      el("div",{className:"grid-2"},
+        el("div",{},el("div",{className:"label"},"מספר סידורי"),el("div",{style:{color:C.p1,fontWeight:700,fontSize:16}},serial)),
+        el("div",{},el("div",{className:"label"},"תאריך פתיחה"),el("div",{style:{color:C.muted,fontSize:14}},formatDate(new Date().toISOString())))
+      )
+    ),
+
+    // Details
+    el("div",{className:"card"},
+      el("div",{className:"card-title",style:{color:C.p1}},"פרטי הזמנה"),
+      field("שם משווק",input("distributorName","הקלד שם משווק")),
+      field("שם לקוח",input("clientName","הקלד שם לקוח")),
+      field("שם פרויקט",input("projectName","הקלד שם פרויקט")),
+      field("שם מוצר",input("productName","הקלד שם מוצר")),
+      field("מטרת המוצר",textarea("productPurpose","תאר את מטרת המוצר"))
+    ),
+
+    // Color
+    el("div",{className:"card"},
+      el("div",{className:"card-title",style:{color:C.p2}},"צבע"),
+      field("תיאור גוון",input("colorDescription","למשל: כחול ים עמוק")),
+      field("מספר פנטון",
+        input("pantonNumber","למשל: Pantone 285 C"),
+        el("div",{style:{marginTop:8}},
+          el("a",{href:"https://www.pantone.com/color-finder",target:"_blank"},"🎨 מצא פנטון באתר Pantone →")
+        ),
+        el("div",{style:{marginTop:12}},
+          el("div",{className:"label"},"תמונת פנטון"),
+          el("label",{className:"img-upload-label"},
+            "📎 הוסף תמונה מהגלריה",
+            el("input",{type:"file",accept:"image/*",style:{display:"none"},
+              onChange:e=>{
+                const file=e.target.files[0];if(!file)return;
+                const r=new FileReader();r.onload=ev=>{state.form.pantonImage=ev.target.result;render();};r.readAsDataURL(file);
+              }
+            })
+          ),
+          f.pantonImage?el("img",{src:f.pantonImage,className:"panton-preview"}):null
+        )
+      ),
+      field("שקיפות",toggle("transparency",["כן","לא"],C.p2)),
+      field("האם נדרש צ׳יפ לאישור",toggle("needsChip",["כן","לא"],C.p2)),
+      field("האם יש דוגמה להתאמה",toggle("hasSample",["כן","לא"],C.p2))
+    ),
+
+    // Raw materials
+    el("div",{className:"card"},
+      el("div",{className:"card-title",style:{color:C.p3}},"חומר גלם"),
+      multi("rawMaterials",RAW_MATERIALS),
+      (f.rawMaterials||[]).includes("OTHER")?el("div",{style:{marginTop:12}},input("otherMaterial","פרט חומר אחר...")):null
+    ),
+
+    // Properties
+    el("div",{className:"card"},
+      el("div",{className:"card-title",style:{color:C.p4}},"תכונות המוצר"),
+      field("הברגה",input("threading","פרט הברגה...")),
+      field("גימור פני שטח",toggle("finish",["מבריק","מט","גומי"],C.p4)),
+      field("מרקם",toggle("flexibility",["גמיש","קשיח"],C.p4))
+    ),
+
+    el("button",{
+      className:"btn btn-solid btn-full",
+      style:{background:C.p1},
+      disabled:!f.clientName||!f.productName,
+      onClick:handleSave
+    },"אישור — שמור הזמנה")
+  );
+}
+
+function renderFieldOnly(){ /* lightweight re-render for text inputs — just full render */ render(); }
+
+// EXECUTION
+function renderExecution(){
+  const list = filterOrders(state.orders.filter(o=>o.status===STATUS.OPEN),state.searchQ);
+
+  return el("div",{className:"screen"},
+    el("div",{className:"header-row"},
+      el("button",{className:"back-btn",onClick:()=>{state.screen="home";render();}},"←"),
+      el("div",{className:"screen-title"},"סטטוס ביצוע"),
+      el("span",{className:"count-pill",style:{background:C.p2+"22",color:C.p2}},list.length)
+    ),
+    el("input",{className:"search-bar",placeholder:"חיפוש לפי שם לקוח, תאריך, משווק, פרויקט, מוצר, פנטון...",value:state.searchQ,
+      onInput:e=>{state.searchQ=e.target.value;render();}}),
+    list.length===0?el("div",{className:"empty"},"אין הזמנות פתוחות"):null,
+    ...list.map(o=>{
+      const sel=state.selectedId===o.id;
+      return el("div",{className:"card order-row",
+        style:{border:`1px solid ${sel?C.p2:"#2E2E3E"}`,marginBottom:10},
+        onClick:()=>{state.selectedId=sel?null:o.id;render();}},
+        el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
+          el("div",{},
+            el("div",{style:{fontWeight:600,marginBottom:4}},o.clientName+" — "+o.productName),
+            el("div",{className:"order-meta"},o.serial+" · "+o.distributorName+" · "+formatDate(o.createdAt)),
+            o.pantonNumber?el("div",{style:{fontSize:12,color:C.p2,marginTop:2}},"פנטון: "+o.pantonNumber):null
+          ),
+          badge(o.status)
+        ),
+        sel?el("div",{className:"order-actions"},
+          el("button",{className:"btn btn-solid btn-flex",style:{background:C.success},
+            onClick:e=>{e.stopPropagation();state.modal={type:"done",order:o};render();}},
+            "✓ בוצע"),
+          el("button",{className:"btn btn-outline btn-flex",style:{color:C.danger,borderColor:C.danger},
+            onClick:e=>{e.stopPropagation();state.modal={type:"cancel",order:o,reason:""};render();}},
+            "✕ בוטל")
+        ):null
+      );
+    })
+  );
+}
+
+// APPROVAL
+function renderApproval(){
+  const list = filterOrders(state.orders.filter(o=>o.status===STATUS.PENDING),state.searchQ);
+
+  return el("div",{className:"screen"},
+    el("div",{className:"header-row"},
+      el("button",{className:"back-btn",onClick:()=>{state.screen="home";render();}},"←"),
+      el("div",{className:"screen-title"},"אישור לקוח"),
+      el("span",{className:"count-pill",style:{background:C.p3+"22",color:C.p3}},list.length)
+    ),
+    el("input",{className:"search-bar",placeholder:"חיפוש לפי שם לקוח, תאריך, משווק, פרויקט, מוצר, פנטון...",value:state.searchQ,
+      onInput:e=>{state.searchQ=e.target.value;render();}}),
+    list.length===0?el("div",{className:"empty"},"אין הזמנות ממתינות לאישור"):null,
+    ...list.map(o=>{
+      const sel=state.selectedId===o.id;
+      return el("div",{className:"card order-row",
+        style:{border:`1px solid ${sel?C.p3:"#2E2E3E"}`,marginBottom:10},
+        onClick:()=>{state.selectedId=sel?null:o.id;render();}},
+        el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
+          el("div",{},
+            el("div",{style:{fontWeight:600,marginBottom:4}},o.clientName+" — "+o.productName),
+            el("div",{className:"order-meta"},o.serial+" · "+o.distributorName+" · "+formatDate(o.createdAt)),
+            o.pantonNumber?el("div",{style:{fontSize:12,color:C.p3,marginTop:2}},"פנטון: "+o.pantonNumber):null
+          ),
+          badge(o.status)
+        ),
+        sel?el("div",{className:"order-actions"},
+          el("button",{className:"btn btn-solid btn-flex",style:{background:C.success},
+            onClick:e=>{e.stopPropagation();state.modal={type:"approve",order:o,sku:""};render();}},
+            "✓ אושר"),
+          el("button",{className:"btn btn-outline btn-flex",style:{color:C.danger,borderColor:C.danger},
+            onClick:e=>{e.stopPropagation();state.modal={type:"reject",order:o,reason:""};render();}},
+            "✕ נדחה")
+        ):null
+      );
+    })
+  );
+}
+
+// ARCHIVE
+function renderArchive(){
+  const tab=state.archiveTab;
+  const list=filterOrders(
+    state.orders.filter(o=>tab==="approved"?o.status===STATUS.APPROVED:o.status===STATUS.REJECTED||o.status===STATUS.CANCELLED),
+    state.searchQ
+  );
+
+  return el("div",{className:"screen"},
+    el("div",{className:"header-row"},
+      el("button",{className:"back-btn",onClick:()=>{state.screen="home";render();}},"←"),
+      el("div",{className:"screen-title"},"ארכיון")
+    ),
+    el("div",{className:"tab-group"},
+      el("button",{className:"tab-btn",
+        style:tab==="approved"?{borderColor:C.success,background:C.success+"22",color:C.success}:{},
+        onClick:()=>{state.archiveTab="approved";state.searchQ="";render();}},"✓ מאושרים"),
+      el("button",{className:"tab-btn",
+        style:tab==="rejected"?{borderColor:C.danger,background:C.danger+"22",color:C.danger}:{},
+        onClick:()=>{state.archiveTab="rejected";state.searchQ="";render();}},"✕ נדחים / בוטלו")
+    ),
+    el("input",{className:"search-bar",placeholder:"חיפוש לפי שם לקוח, תאריך, משווק, פרויקט, מוצר, פנטון...",value:state.searchQ,
+      onInput:e=>{state.searchQ=e.target.value;render();}}),
+    list.length===0?el("div",{className:"empty"},"אין הזמנות בקטגוריה זו"):null,
+    ...list.map(o=>el("div",{className:"card",style:{marginBottom:10}},
+      el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}},
+        el("div",{},
+          el("div",{style:{fontWeight:600}},o.clientName+" — "+o.productName),
+          el("div",{className:"order-meta"},o.serial+" · "+o.distributorName+" · "+(o.projectName||"")),
+          el("div",{className:"order-meta"},formatDate(o.createdAt)+(o.pantonNumber?" · פנטון: "+o.pantonNumber:"")),
+          o.colorSku?el("div",{style:{fontSize:12,color:C.success,marginTop:2}},"מק״ט: "+o.colorSku):null,
+          (o.rejectReason||o.cancelReason)?el("div",{style:{fontSize:12,color:C.danger,marginTop:2}},"סיבה: "+(o.rejectReason||o.cancelReason)):null
+        ),
+        badge(o.status)
+      )
+    ))
+  );
+}
+
+// ── MODALS ───────────────────────────────────────────
+function renderModal(){
+  const m=state.modal;
+  const close=()=>{state.modal=null;render();};
+
+  const overlay=(title,content)=>el("div",{className:"modal-overlay",onClick:close},
+    el("div",{className:"modal-box",onClick:e=>e.stopPropagation()},
+      el("div",{className:"modal-title"},title),
+      content
+    )
+  );
+
+  if(m.type==="done"){
+    return overlay("אישור ביצוע",el("div",{},
+      el("div",{style:{color:C.muted,marginBottom:20,fontSize:14}},"ההזמנה תועבר לסטטוס \"ממתין לאישור לקוח\""),
+      el("div",{style:{display:"flex",gap:10}},
+        el("button",{className:"btn btn-solid btn-flex",style:{background:C.success},onClick:async()=>{
+          updateOrder(m.order.id,{status:STATUS.PENDING});
+          await syncOrder("update",getOrder(m.order.id));
+          state.modal=null;state.selectedId=null;render();
+        }},"✓ אשר ביצוע"),
+        el("button",{className:"btn btn-outline btn-flex",style:{color:C.muted,borderColor:C.muted},onClick:close},"חזור")
+      )
+    ));
+  }
+
+  if(m.type==="cancel"){
+    const ta=el("textarea",{className:"input",placeholder:"הזן סיבת ביטול...",rows:3,
+      onInput:e=>{m.reason=e.target.value;}},m.reason||"");
+    return overlay("סיבת ביטול",el("div",{},
+      el("div",{className:"field"},el("div",{className:"label"},"פרט סיבת ביטול"),ta),
+      el("div",{style:{display:"flex",gap:10,marginTop:8}},
+        el("button",{className:"btn btn-outline btn-flex",style:{color:C.danger,borderColor:C.danger},onClick:async()=>{
+          if(!m.reason)return;
+          updateOrder(m.order.id,{status:STATUS.CANCELLED,cancelReason:m.reason});
+          await syncOrder("update",getOrder(m.order.id));
+          state.modal=null;state.selectedId=null;render();
+        }},"אישור ביטול"),
+        el("button",{className:"btn btn-outline btn-flex",style:{color:C.muted,borderColor:C.muted},onClick:close},"חזור")
+      )
+    ));
+  }
+
+  if(m.type==="approve"){
+    const inp=el("input",{className:"input",placeholder:"הזן מק״ט צבע...",value:m.sku||"",
+      onInput:e=>{m.sku=e.target.value;}});
+    return overlay("אישור לקוח — מק״ט צבע",el("div",{},
+      el("div",{className:"field"},el("div",{className:"label"},"מק״ט צבע"),inp),
+      el("div",{style:{display:"flex",gap:10,marginTop:8}},
+        el("button",{className:"btn btn-solid btn-flex",style:{background:C.success},onClick:async()=>{
+          if(!m.sku)return;
+          updateOrder(m.order.id,{status:STATUS.APPROVED,colorSku:m.sku});
+          await syncOrder("update",getOrder(m.order.id));
+          state.modal=null;state.selectedId=null;render();
+        }},"✓ אשר"),
+        el("button",{className:"btn btn-outline btn-flex",style:{color:C.muted,borderColor:C.muted},onClick:close},"חזור")
+      )
+    ));
+  }
+
+  if(m.type==="reject"){
+    const ta=el("textarea",{className:"input",placeholder:"הזן סיבת דחייה...",rows:3,
+      onInput:e=>{m.reason=e.target.value;}},m.reason||"");
+    return overlay("סיבת דחייה",el("div",{},
+      el("div",{className:"field"},el("div",{className:"label"},"פרט סיבת דחייה"),ta),
+      el("div",{style:{display:"flex",gap:10,marginTop:8}},
+        el("button",{className:"btn btn-outline btn-flex",style:{color:C.danger,borderColor:C.danger},onClick:async()=>{
+          if(!m.reason)return;
+          updateOrder(m.order.id,{status:STATUS.REJECTED,rejectReason:m.reason});
+          await syncOrder("update",getOrder(m.order.id));
+          state.modal=null;state.selectedId=null;render();
+        }},"אשר דחייה"),
+        el("button",{className:"btn btn-outline btn-flex",style:{color:C.muted,borderColor:C.muted},onClick:close},"חזור")
+      )
+    ));
+  }
+  return null;
+}
+
+// ── BADGE ────────────────────────────────────────────
+function badge(status){
+  const map={[STATUS.OPEN]:C.p1,[STATUS.PENDING]:C.warn,[STATUS.APPROVED]:C.success,[STATUS.REJECTED]:C.danger,[STATUS.CANCELLED]:C.dim};
+  const col=map[status]||C.muted;
+  return el("span",{className:"badge",style:{background:col+"22",color:col,border:`1px solid ${col}44`}},status);
+}
+
+// ── MANUAL SYNC ──────────────────────────────────────
+async function manualSync(){
+  setSyncStatus("syncing");
+  const res=await sheetsPost("syncAll",{orders:state.orders});
+  setSyncStatus(res?.success?"ok":"err");
+  setTimeout(()=>setSyncStatus("idle"),3000);
+}
+
+// ── INIT ─────────────────────────────────────────────
+async function init(){
+  state.orders = loadLocal();
+  render();
+
+  if(APPS_SCRIPT_URL){
+    setSyncStatus("syncing");
+    const data = await sheetsGet();
+    if(data?.orders?.length>0){
+      state.orders=data.orders;
+      saveLocal(state.orders);
+    }
+    setSyncStatus("ok");
+    setTimeout(()=>setSyncStatus("idle"),3000);
+    render();
+  }
+}
+
+init();
+</script>
+</body>
+</html>

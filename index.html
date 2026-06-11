@@ -343,24 +343,61 @@ function buildNewForm(serial){
 
 // ── EXECUTION ──
 function renderExecution(){
-  const list=filterOrders(state.orders.filter(o=>o.status===STATUS.OPEN),state.searchQ);
+  const allOrders=state.orders.filter(o=>o.status===STATUS.OPEN);
+  const list=filterOrders(allOrders,state.searchQ);
   const wrap=el("div",{className:"screen"});
+
+  const countPill=el("span",{className:"count-pill",style:{background:C.p2+"22",color:C.p2,marginRight:"auto"}},list.length);
   wrap.append(
     el("div",{className:"header-row"},
       el("button",{className:"back-btn",onClick:()=>{state.screen="home";render();}},"←"),
       el("div",{className:"screen-title"},"סטטוס ביצוע"),
-      el("span",{className:"count-pill",style:{background:C.p2+"22",color:C.p2,marginRight:"auto"}},list.length)
+      countPill
     )
   );
+  const listDiv=el("div",{id:"order-list"});
+
+  function buildRows(filteredList){
+    listDiv.innerHTML="";
+    if(filteredList.length===0){listDiv.appendChild(el("div",{className:"empty"},"אין הזמנות פתוחות"));return;}
+    filteredList.forEach(o=>{
+      const sel=state.selectedId===o.id;
+      const card=el("div",{className:"card order-row",style:{border:`1px solid ${sel?C.p2:"#e0e0e0"}`,marginBottom:10}});
+      card.addEventListener("click",()=>{state.selectedId=sel?null:o.id;buildRows(filterOrders(allOrders,state.searchQ));});
+      card.append(
+        el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
+          el("div",{style:{flex:1}},
+            el("div",{style:{fontWeight:600,marginBottom:4,color:"#1a1a1a"}},o.clientName+" — "+o.productName),
+            el("div",{className:"order-meta"},o.serial+" · "+(o.distributorName||"")+" · "+(o.projectName||"")),
+            el("div",{className:"order-meta"},formatDate(o.createdAt)+(o.pantonNumber?" · פנטון: "+o.pantonNumber:"")),
+            o.colorDescription?el("div",{style:{fontSize:12,color:"#555",marginTop:2}},"גוון: "+o.colorDescription):null,
+            o.pantonImage?el("img",{src:o.pantonImage,style:{maxHeight:"48px",borderRadius:"6px",border:"1px solid #e0e0e0",marginTop:"6px",display:"block"}}):null
+          ),
+          badge(o.status)
+        )
+      );
+      if(sel){
+        const actions=el("div",{className:"order-actions"});
+        const doneBtn=el("button",{className:"btn btn-flex",style:{background:C.success,color:"#000"}},"✓ בוצע");
+        doneBtn.addEventListener("click",e=>{e.stopPropagation();state.modal={type:"done",order:o};render();});
+        const cancelBtn=el("button",{className:"btn btn-flex",style:{background:"transparent",border:`1px solid ${C.danger}`,color:C.danger}},"✕ בוטל");
+        cancelBtn.addEventListener("click",e=>{e.stopPropagation();state.modal={type:"cancel",order:o,reason:""};render();});
+        actions.append(doneBtn,cancelBtn);card.appendChild(actions);
+      }
+      listDiv.appendChild(card);
+    });
+  }
+
   const search=el("input",{className:"search-bar",placeholder:"חיפוש...",value:state.searchQ});
   search.addEventListener("input",e=>{
     state.searchQ=e.target.value;
-    const pos=e.target.selectionStart;
-    render();
-    const newSearch=document.querySelector(".search-bar");
-    if(newSearch){newSearch.focus();try{newSearch.setSelectionRange(pos,pos);}catch(e){}}
+    countPill.textContent=filterOrders(allOrders,state.searchQ).length;
+    buildRows(filterOrders(allOrders,state.searchQ));
   });
   wrap.appendChild(search);
+  buildRows(list);
+  wrap.appendChild(listDiv);
+  return wrap;
   if(list.length===0){wrap.appendChild(el("div",{className:"empty"},"אין הזמנות פתוחות"));return wrap;}
   list.forEach(o=>{
     const sel=state.selectedId===o.id;
@@ -391,24 +428,61 @@ function renderExecution(){
 
 // ── APPROVAL ──
 function renderApproval(){
-  const list=filterOrders(state.orders.filter(o=>o.status===STATUS.PENDING),state.searchQ);
+  const allOrders=state.orders.filter(o=>o.status===STATUS.PENDING);
+  const list=filterOrders(allOrders,state.searchQ);
   const wrap=el("div",{className:"screen"});
+
+  const countPill=el("span",{className:"count-pill",style:{background:C.p3+"22",color:C.p3,marginRight:"auto"}},list.length);
   wrap.append(
     el("div",{className:"header-row"},
       el("button",{className:"back-btn",onClick:()=>{state.screen="home";render();}},"←"),
       el("div",{className:"screen-title"},"אישור לקוח"),
-      el("span",{className:"count-pill",style:{background:C.p3+"22",color:C.p3,marginRight:"auto"}},list.length)
+      countPill
     )
   );
+  const listDiv=el("div",{id:"order-list"});
+
+  function buildRows(filteredList){
+    listDiv.innerHTML="";
+    if(filteredList.length===0){listDiv.appendChild(el("div",{className:"empty"},"אין הזמנות ממתינות לאישור"));return;}
+    filteredList.forEach(o=>{
+      const sel=state.selectedId===o.id;
+      const card=el("div",{className:"card order-row",style:{border:`1px solid ${sel?C.p3:"#e0e0e0"}`,marginBottom:10}});
+      card.addEventListener("click",()=>{state.selectedId=sel?null:o.id;buildRows(filterOrders(allOrders,state.searchQ));});
+      card.append(
+        el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
+          el("div",{style:{flex:1}},
+            el("div",{style:{fontWeight:600,marginBottom:4,color:"#1a1a1a"}},o.clientName+" — "+o.productName),
+            el("div",{className:"order-meta"},o.serial+" · "+(o.distributorName||"")+" · "+(o.projectName||"")),
+            el("div",{className:"order-meta"},formatDate(o.createdAt)+(o.pantonNumber?" · פנטון: "+o.pantonNumber:"")),
+            o.colorDescription?el("div",{style:{fontSize:12,color:"#555",marginTop:2}},"גוון: "+o.colorDescription):null,
+            o.pantonImage?el("img",{src:o.pantonImage,style:{maxHeight:"48px",borderRadius:"6px",border:"1px solid #e0e0e0",marginTop:"6px",display:"block"}}):null
+          ),
+          badge(o.status)
+        )
+      );
+      if(sel){
+        const actions=el("div",{className:"order-actions"});
+        const apprBtn=el("button",{className:"btn btn-flex",style:{background:C.success,color:"#000"}},"✓ אושר");
+        apprBtn.addEventListener("click",e=>{e.stopPropagation();state.modal={type:"approve",order:o,sku:""};render();});
+        const rejBtn=el("button",{className:"btn btn-flex",style:{background:"transparent",border:`1px solid ${C.danger}`,color:C.danger}},"✕ נדחה");
+        rejBtn.addEventListener("click",e=>{e.stopPropagation();state.modal={type:"reject",order:o,reason:""};render();});
+        actions.append(apprBtn,rejBtn);card.appendChild(actions);
+      }
+      listDiv.appendChild(card);
+    });
+  }
+
   const search=el("input",{className:"search-bar",placeholder:"חיפוש...",value:state.searchQ});
   search.addEventListener("input",e=>{
     state.searchQ=e.target.value;
-    const pos=e.target.selectionStart;
-    render();
-    const newSearch=document.querySelector(".search-bar");
-    if(newSearch){newSearch.focus();try{newSearch.setSelectionRange(pos,pos);}catch(e){}}
+    countPill.textContent=filterOrders(allOrders,state.searchQ).length;
+    buildRows(filterOrders(allOrders,state.searchQ));
   });
   wrap.appendChild(search);
+  buildRows(list);
+  wrap.appendChild(listDiv);
+  return wrap;
   if(list.length===0){wrap.appendChild(el("div",{className:"empty"},"אין הזמנות ממתינות לאישור"));return wrap;}
   list.forEach(o=>{
     const sel=state.selectedId===o.id;
@@ -457,15 +531,37 @@ function renderArchive(){
       })
     )
   );
+  const listDiv=el("div",{id:"archive-list"});
+  function buildArchiveRows(q){
+    const filtered=filterOrders(state.orders.filter(o=>tab==="approved"?o.status===STATUS.APPROVED:o.status===STATUS.REJECTED||o.status===STATUS.CANCELLED),q);
+    listDiv.innerHTML="";
+    if(filtered.length===0){listDiv.appendChild(el("div",{className:"empty"},"אין הזמנות בקטגוריה זו"));return;}
+    filtered.forEach(o=>{
+      listDiv.appendChild(el("div",{className:"card",style:{marginBottom:10}},
+        el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
+          el("div",{},
+            el("div",{style:{fontWeight:600,color:"#1a1a1a"}},o.clientName+" — "+o.productName),
+            el("div",{className:"order-meta"},o.serial+" · "+(o.distributorName||"")+" · "+(o.projectName||"")),
+            el("div",{className:"order-meta"},formatDate(o.createdAt)+(o.pantonNumber?" · פנטון: "+o.pantonNumber:"")),
+            o.colorDescription?el("div",{style:{fontSize:12,color:"#555",marginTop:2}},"גוון: "+o.colorDescription):null,
+            o.pantonImage?el("img",{src:o.pantonImage,style:{maxHeight:"50px",borderRadius:"6px",border:"1px solid #e0e0e0",marginTop:"6px",display:"block"}}):null,
+            o.colorSku?el("div",{style:{fontSize:12,color:C.success,marginTop:2}},"מק״ט: "+o.colorSku):null,
+            (o.rejectReason||o.cancelReason)?el("div",{style:{fontSize:12,color:C.danger,marginTop:2}},"סיבה: "+(o.rejectReason||o.cancelReason)):null
+          ),
+          badge(o.status)
+        )
+      ));
+    });
+  }
   const search=el("input",{className:"search-bar",placeholder:"חיפוש...",value:state.searchQ});
   search.addEventListener("input",e=>{
     state.searchQ=e.target.value;
-    const pos=e.target.selectionStart;
-    render();
-    const newSearch=document.querySelector(".search-bar");
-    if(newSearch){newSearch.focus();try{newSearch.setSelectionRange(pos,pos);}catch(e){}}
+    buildArchiveRows(state.searchQ);
   });
   wrap.appendChild(search);
+  buildArchiveRows(state.searchQ);
+  wrap.appendChild(listDiv);
+  return wrap;
   if(list.length===0){wrap.appendChild(el("div",{className:"empty"},"אין הזמנות בקטגוריה זו"));return wrap;}
   list.forEach(o=>{
     wrap.appendChild(el("div",{className:"card",style:{marginBottom:10}},

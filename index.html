@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Color Orders</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="apple-touch-icon" href="https://drive.google.com/uc?export=view&id=1-aFVORAgJiT7a_rDzY4Eo9jwXgqqSzi6"/>
+<link rel="icon" type="image/png" href="https://drive.google.com/uc?export=view&id=1-aFVORAgJiT7a_rDzY4Eo9jwXgqqSzi6"/>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -351,7 +353,13 @@ function renderExecution(){
     )
   );
   const search=el("input",{className:"search-bar",placeholder:"חיפוש...",value:state.searchQ});
-  search.addEventListener("input",e=>{state.searchQ=e.target.value;render();});
+  search.addEventListener("input",e=>{
+    state.searchQ=e.target.value;
+    const pos=e.target.selectionStart;
+    render();
+    const newSearch=document.querySelector(".search-bar");
+    if(newSearch){newSearch.focus();try{newSearch.setSelectionRange(pos,pos);}catch(e){}}
+  });
   wrap.appendChild(search);
   if(list.length===0){wrap.appendChild(el("div",{className:"empty"},"אין הזמנות פתוחות"));return wrap;}
   list.forEach(o=>{
@@ -393,7 +401,13 @@ function renderApproval(){
     )
   );
   const search=el("input",{className:"search-bar",placeholder:"חיפוש...",value:state.searchQ});
-  search.addEventListener("input",e=>{state.searchQ=e.target.value;render();});
+  search.addEventListener("input",e=>{
+    state.searchQ=e.target.value;
+    const pos=e.target.selectionStart;
+    render();
+    const newSearch=document.querySelector(".search-bar");
+    if(newSearch){newSearch.focus();try{newSearch.setSelectionRange(pos,pos);}catch(e){}}
+  });
   wrap.appendChild(search);
   if(list.length===0){wrap.appendChild(el("div",{className:"empty"},"אין הזמנות ממתינות לאישור"));return wrap;}
   list.forEach(o=>{
@@ -444,7 +458,13 @@ function renderArchive(){
     )
   );
   const search=el("input",{className:"search-bar",placeholder:"חיפוש...",value:state.searchQ});
-  search.addEventListener("input",e=>{state.searchQ=e.target.value;render();});
+  search.addEventListener("input",e=>{
+    state.searchQ=e.target.value;
+    const pos=e.target.selectionStart;
+    render();
+    const newSearch=document.querySelector(".search-bar");
+    if(newSearch){newSearch.focus();try{newSearch.setSelectionRange(pos,pos);}catch(e){}}
+  });
   wrap.appendChild(search);
   if(list.length===0){wrap.appendChild(el("div",{className:"empty"},"אין הזמנות בקטגוריה זו"));return wrap;}
   list.forEach(o=>{

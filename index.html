@@ -760,7 +760,9 @@ function renderEdit(){
       };
       state.orders=state.orders.map(x=>x.id===o.id?updated:x);
       saveLocal(state.orders);
-      // Full sync to overwrite all rows cleanly
+      // Deduplicate then sync
+      state.orders=deduplicateOrders(state.orders);
+      saveLocal(state.orders);
       if(APPS_SCRIPT_URL){
         state.syncStatus="syncing";softRender();
         const res=await sheetsPost("syncAll",{orders:state.orders});
@@ -775,13 +777,25 @@ function renderEdit(){
   return wrap;
 }
 
+function deduplicateOrders(orders){
+  // Keep only one order per serial — the one with the latest createdAt
+  const map={};
+  orders.forEach(o=>{
+    const key=o.serial;
+    if(!map[key]||o.id>map[key].id) map[key]=o;
+  });
+  return Object.values(map);
+}
+
 async function init(){
-  state.orders=loadLocal();
+  const raw=loadLocal();
+  state.orders=deduplicateOrders(raw);
+  saveLocal(state.orders);
   render();
   if(APPS_SCRIPT_URL){
     state.syncStatus="syncing";softRender();
     const data=await sheetsGet();
-    if(data?.orders?.length>0){state.orders=data.orders;saveLocal(state.orders);}
+    if(data?.orders?.length>0){state.orders=deduplicateOrders(data.orders);saveLocal(state.orders);}
     state.syncStatus="ok";render();
     setTimeout(()=>{state.syncStatus="idle";softRender();},3000);
   }

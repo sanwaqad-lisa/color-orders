@@ -82,7 +82,7 @@ const RAW_MATERIALS=["PE","PP","PET","PCR","TPE","PMMA","GLASS","ALUMINIUM","OTH
 const STORAGE_KEY="colorOrders_v4";
 const C={p1:"#a78bfa",p2:"#fb923c",p3:"#34d399",p4:"#60a5fa",danger:"#f87171",success:"#34d399",warn:"#fbbf24"};
 
-let state={screen:"home",orders:[],syncStatus:"idle",modal:null,selectedId:null,archiveTab:"approved",searchQ:""};
+let state={screen:"home",orders:[],syncStatus:"idle",modal:null,selectedId:null,archiveTab:"approved",searchQ:"",editOrder:null};
 
 // inputs stored separately to avoid re-render loss
 let formData={};
@@ -254,7 +254,7 @@ function renderHome(){
 function renderNew(){
   return buildNewForm(generateSerial());
 }
-function buildNewForm(serial){
+function buildNewForm(serial,isEdit){
   const liveInput=(key,placeholder)=>{
     const inp=el("input",{className:"input",value:formData[key]||"",placeholder});
     inp.addEventListener("input",e=>{formData[key]=e.target.value;});
@@ -352,6 +352,7 @@ function buildNewForm(serial){
       f("שם משווק",liveInput("distributorName","הקלד שם משווק")),
       f("שם לקוח",liveInput("clientName","הקלד שם לקוח")),
       f("שם פרויקט",liveInput("projectName","הקלד שם פרויקט")),
+      f("מספר תבנית",liveInput("templateNumber","הקלד מספר תבנית")),
       f("שם מוצר",liveInput("productName","הקלד שם מוצר")),
       f("מטרת המוצר",liveTextarea("productPurpose","תאר את מטרת המוצר")),
       f("כמות",liveInput("quantity","הקלד כמות...")),
@@ -426,7 +427,9 @@ function renderExecution(){
         doneBtn.addEventListener("click",e=>{e.stopPropagation();state.modal={type:"done",order:o};render();});
         const cancelBtn=el("button",{className:"btn btn-flex",style:{background:"transparent",border:`1px solid ${C.danger}`,color:C.danger}},"✕ בוטל");
         cancelBtn.addEventListener("click",e=>{e.stopPropagation();state.modal={type:"cancel",order:o,reason:""};render();});
-        actions.append(doneBtn,cancelBtn);card.appendChild(actions);
+        const editBtn=el("button",{className:"btn btn-flex",style:{background:"transparent",border:`1px solid ${C.p4}`,color:C.p4}},"✏ ערוך");
+        editBtn.addEventListener("click",e=>{e.stopPropagation();state.editOrder=o;formData={...o};state.screen="edit";render();});
+        actions.append(doneBtn,cancelBtn,editBtn);card.appendChild(actions);
       }
       listDiv.appendChild(card);
     });
@@ -708,8 +711,45 @@ function renderScreen(){
     case"execution":return renderExecution();
     case"approval":return renderApproval();
     case"archive":return renderArchive();
+    case"edit":return renderEdit();
     default:return renderHome();
   }
+}
+
+// ── EDIT ORDER ──
+function renderEdit(){
+  const o=state.editOrder;
+  if(!o){state.screen="home";return renderHome();}
+
+  const wrap=el("div",{className:"screen"});
+  wrap.appendChild(
+    el("div",{className:"header-row"},
+      el("button",{className:"back-btn",onClick:()=>{state.screen="execution";state.editOrder=null;formData={};render();}},"←"),
+      el("div",{className:"screen-title"},"עריכת הזמנה"),
+      el("div",{style:{fontSize:13,color:"#888",marginRight:"auto"}},o.serial)
+    )
+  );
+
+  // Build the same form
+  const form=buildNewForm(o.serial,true);
+
+  // Replace save button behavior
+  const oldBtn=form.querySelector("button.btn.btn-full");
+  if(oldBtn){
+    oldBtn.textContent="שמור שינויים";
+    oldBtn.onclick=async()=>{
+      if(!formData.clientName||!formData.productName)return;
+      oldBtn.textContent="שומר...";oldBtn.disabled=true;
+      const updated={...o,...formData,serial:o.serial,createdAt:o.createdAt,id:o.id,status:o.status};
+      state.orders=state.orders.map(x=>x.id===o.id?updated:x);
+      saveLocal(state.orders);
+      await syncOrder("update",updated);
+      state.editOrder=null;formData={};state.screen="execution";render();
+    };
+  }
+
+  wrap.appendChild(form);
+  return wrap;
 }
 
 async function init(){

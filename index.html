@@ -760,7 +760,13 @@ function renderEdit(){
       };
       state.orders=state.orders.map(x=>x.id===o.id?updated:x);
       saveLocal(state.orders);
-      await syncOrder("update",updated);
+      // Full sync to overwrite all rows cleanly
+      if(APPS_SCRIPT_URL){
+        state.syncStatus="syncing";softRender();
+        const res=await sheetsPost("syncAll",{orders:state.orders});
+        state.syncStatus=res?.success?"ok":"err";
+        setTimeout(()=>{state.syncStatus="idle";softRender();},3000);
+      }
       state.editOrder=null;formData={};state.screen="execution";render();
     });
   }

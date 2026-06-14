@@ -758,7 +758,9 @@ function renderEdit(){
         id:o.id,
         status:o.status
       };
-      state.orders=state.orders.map(x=>x.id===o.id?updated:x);
+      // Remove ALL orders with this serial first, then add the updated one
+      state.orders=state.orders.filter(x=>x.serial!==o.serial);
+      state.orders.push(updated);
       saveLocal(state.orders);
       // Deduplicate then sync
       state.orders=deduplicateOrders(state.orders);

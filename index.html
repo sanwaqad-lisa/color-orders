@@ -121,7 +121,15 @@ function formatDate(iso){
 function filterOrders(list,q){
   if(!q)return list;
   const lq=q.toLowerCase();
-  return list.filter(o=>[o.clientName,o.distributorName,o.projectName,o.productName,o.pantonNumber,o.serial,formatDate(o.createdAt)].some(v=>v&&v.toLowerCase().includes(lq)));
+  return list.filter(o=>[
+    o.clientName,
+    o.distributorName,
+    o.productName,
+    o.templateNumber,
+    o.pantonNumber,
+    o.colorDescription,
+    formatDate(o.createdAt)
+  ].some(v=>v&&v.toLowerCase().includes(lq)));
 }
 function getOrder(id){return state.orders.find(o=>o.id===id);}
 function updateOrder(id,patch){state.orders=state.orders.map(o=>o.id===id?{...o,...patch}:o);saveLocal(state.orders);}
@@ -417,9 +425,9 @@ function renderExecution(){
         el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
           el("div",{style:{flex:1}},
             el("div",{style:{fontWeight:600,marginBottom:4,color:"#1a1a1a"}},o.clientName+" — "+o.productName),
-            el("div",{className:"order-meta"},o.serial+" · "+(o.distributorName||"")+" · "+(o.projectName||"")),
-            el("div",{className:"order-meta"},formatDate(o.createdAt)+(o.pantonNumber?" · פנטון: "+o.pantonNumber:"")),
-            o.colorDescription?el("div",{style:{fontSize:12,color:"#555",marginTop:2}},"גוון: "+o.colorDescription):null,
+            el("div",{className:"order-meta"},o.serial+(o.templateNumber?" · תבנית: "+o.templateNumber:"")+" · "+(o.distributorName||"")),
+            el("div",{className:"order-meta"},(o.productName||"")+" · "+formatDate(o.createdAt)),
+            o.pantonNumber||o.colorDescription?el("div",{className:"order-meta"},(o.colorDescription?"גוון: "+o.colorDescription:"")+(o.colorDescription&&o.pantonNumber?" · ":"")+(o.pantonNumber?"פנטון: "+o.pantonNumber:"")):null,
             o.pantonImage?el("img",{src:o.pantonImage,style:{maxHeight:"48px",borderRadius:"6px",border:"1px solid #e0e0e0",marginTop:"6px",display:"block"}}):null
           ),
           badge(o.status)
@@ -445,7 +453,7 @@ function renderExecution(){
     });
   }
 
-  const search=el("input",{className:"search-bar",placeholder:"חיפוש...",value:state.searchQ});
+  const search=el("input",{className:"search-bar",placeholder:"חיפוש לפי משווק, לקוח, מוצר, תבנית, פנטון, גוון, תאריך...",value:state.searchQ});
   search.addEventListener("input",e=>{
     state.searchQ=e.target.value;
     countPill.textContent=filterOrders(allOrders,state.searchQ).length;
@@ -510,9 +518,9 @@ function renderApproval(){
         el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
           el("div",{style:{flex:1}},
             el("div",{style:{fontWeight:600,marginBottom:4,color:"#1a1a1a"}},o.clientName+" — "+o.productName),
-            el("div",{className:"order-meta"},o.serial+" · "+(o.distributorName||"")+" · "+(o.projectName||"")),
-            el("div",{className:"order-meta"},formatDate(o.createdAt)+(o.pantonNumber?" · פנטון: "+o.pantonNumber:"")),
-            o.colorDescription?el("div",{style:{fontSize:12,color:"#555",marginTop:2}},"גוון: "+o.colorDescription):null,
+            el("div",{className:"order-meta"},o.serial+(o.templateNumber?" · תבנית: "+o.templateNumber:"")+" · "+(o.distributorName||"")),
+            el("div",{className:"order-meta"},(o.productName||"")+" · "+formatDate(o.createdAt)),
+            o.pantonNumber||o.colorDescription?el("div",{className:"order-meta"},(o.colorDescription?"גוון: "+o.colorDescription:"")+(o.colorDescription&&o.pantonNumber?" · ":"")+(o.pantonNumber?"פנטון: "+o.pantonNumber:"")):null,
             o.pantonImage?el("img",{src:o.pantonImage,style:{maxHeight:"48px",borderRadius:"6px",border:"1px solid #e0e0e0",marginTop:"6px",display:"block"}}):null
           ),
           badge(o.status)
@@ -530,7 +538,7 @@ function renderApproval(){
     });
   }
 
-  const search=el("input",{className:"search-bar",placeholder:"חיפוש...",value:state.searchQ});
+  const search=el("input",{className:"search-bar",placeholder:"חיפוש לפי משווק, לקוח, מוצר, תבנית, פנטון, גוון, תאריך...",value:state.searchQ});
   search.addEventListener("input",e=>{
     state.searchQ=e.target.value;
     countPill.textContent=filterOrders(allOrders,state.searchQ).length;
@@ -598,9 +606,9 @@ function renderArchive(){
         el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
           el("div",{},
             el("div",{style:{fontWeight:600,color:"#1a1a1a"}},o.clientName+" — "+o.productName),
-            el("div",{className:"order-meta"},o.serial+" · "+(o.distributorName||"")+" · "+(o.projectName||"")),
-            el("div",{className:"order-meta"},formatDate(o.createdAt)+(o.pantonNumber?" · פנטון: "+o.pantonNumber:"")),
-            o.colorDescription?el("div",{style:{fontSize:12,color:"#555",marginTop:2}},"גוון: "+o.colorDescription):null,
+            el("div",{className:"order-meta"},o.serial+(o.templateNumber?" · תבנית: "+o.templateNumber:"")+" · "+(o.distributorName||"")),
+            el("div",{className:"order-meta"},(o.productName||"")+" · "+formatDate(o.createdAt)),
+            o.pantonNumber||o.colorDescription?el("div",{className:"order-meta"},(o.colorDescription?"גוון: "+o.colorDescription:"")+(o.colorDescription&&o.pantonNumber?" · ":"")+(o.pantonNumber?"פנטון: "+o.pantonNumber:"")):null,
             o.pantonImage?el("img",{src:o.pantonImage,style:{maxHeight:"50px",borderRadius:"6px",border:"1px solid #e0e0e0",marginTop:"6px",display:"block"}}):null,
             o.colorSku?el("div",{style:{fontSize:12,color:C.success,marginTop:2}},"מק״ט: "+o.colorSku):null,
             (o.rejectReason||o.cancelReason)?el("div",{style:{fontSize:12,color:C.danger,marginTop:2}},"סיבה: "+(o.rejectReason||o.cancelReason)):null
@@ -610,7 +618,7 @@ function renderArchive(){
       ));
     });
   }
-  const search=el("input",{className:"search-bar",placeholder:"חיפוש...",value:state.searchQ});
+  const search=el("input",{className:"search-bar",placeholder:"חיפוש לפי משווק, לקוח, מוצר, תבנית, פנטון, גוון, תאריך...",value:state.searchQ});
   search.addEventListener("input",e=>{
     state.searchQ=e.target.value;
     buildArchiveRows(state.searchQ);

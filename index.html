@@ -310,7 +310,7 @@ function buildNewForm(serial,isEdit){
   otherInp.addEventListener("input",e=>{formData.otherMaterial=e.target.value;});
   otherWrap.appendChild(otherInp);
 
-  const saveBtn=el("button",{className:"btn btn-full",style:{background:C.p1,color:"#000",fontSize:16,marginTop:4}},isEdit?"שמור שינויים":"אישור — שמור הזמנה");
+  const saveBtn=el("button",{id:"main-save-btn",className:"btn btn-full",style:{background:C.p1,color:"#000",fontSize:16,marginTop:4}},isEdit?"שמור שינויים":"אישור — שמור הזמנה");
   if(!isEdit){
     saveBtn.addEventListener("click",async()=>{
       if(!formData.clientName||!formData.productName)return;
@@ -320,6 +320,8 @@ function buildNewForm(serial,isEdit){
       await syncOrder("save",newOrder);
       formData={};state.screen="home";render();
     });
+  } else {
+    saveBtn.setAttribute("data-edit","true");
   }
 
   // panton image
@@ -430,7 +432,13 @@ function renderExecution(){
         const cancelBtn=el("button",{className:"btn btn-flex",style:{background:"transparent",border:`1px solid ${C.danger}`,color:C.danger}},"✕ בוטל");
         cancelBtn.addEventListener("click",e=>{e.stopPropagation();state.modal={type:"cancel",order:o,reason:""};render();});
         const editBtn=el("button",{className:"btn btn-flex",style:{background:"transparent",border:`1px solid ${C.p4}`,color:C.p4}},"✏ ערוך");
-        editBtn.addEventListener("click",e=>{e.stopPropagation();state.editOrder=o;formData={...o};state.screen="edit";render();});
+        editBtn.addEventListener("click",e=>{
+          e.stopPropagation();
+          state.editOrder=o;
+          // deep copy all fields including arrays
+          formData=JSON.parse(JSON.stringify(o));
+          state.screen="edit";render();
+        });
         actions.append(doneBtn,cancelBtn,editBtn);card.appendChild(actions);
       }
       listDiv.appendChild(card);
@@ -735,13 +743,21 @@ function renderEdit(){
   // Build the same form with isEdit=true (save button has no handler yet)
   const form=buildNewForm(o.serial,true);
 
-  // Attach save handler to the button
-  const saveBtn=form.querySelector("button.btn.btn-full");
+  // Attach save handler to the edit button
+  const saveBtn=form.querySelector("#main-save-btn");
   if(saveBtn){
     saveBtn.addEventListener("click",async()=>{
       if(!formData.clientName||!formData.productName)return;
       saveBtn.textContent="שומר...";saveBtn.disabled=true;
-      const updated={...o,...formData,serial:o.serial,createdAt:o.createdAt,id:o.id,status:o.status};
+      // merge formData over original order, preserve system fields
+      const updated={
+        ...o,
+        ...formData,
+        serial:o.serial,
+        createdAt:o.createdAt,
+        id:o.id,
+        status:o.status
+      };
       state.orders=state.orders.map(x=>x.id===o.id?updated:x);
       saveLocal(state.orders);
       await syncOrder("update",updated);

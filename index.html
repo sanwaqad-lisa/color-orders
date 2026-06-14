@@ -126,6 +126,49 @@ function filterOrders(list,q){
 function getOrder(id){return state.orders.find(o=>o.id===id);}
 function updateOrder(id,patch){state.orders=state.orders.map(o=>o.id===id?{...o,...patch}:o);saveLocal(state.orders);}
 
+
+// ── PASSWORD ──────────────────────────────────────────────────
+const APP_PASSWORD = "color2026"; // ← שני הסיסמה כאן
+
+function checkAuth(){
+  return sessionStorage.getItem("auth") === APP_PASSWORD;
+}
+
+function renderLogin(){
+  const wrap = el("div",{style:{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#f5f5f5"}});
+  const box = el("div",{style:{background:"#fff",borderRadius:16,padding:"40px 32px",width:"100%",maxWidth:340,boxShadow:"0 2px 16px rgba(0,0,0,0.08)",textAlign:"center"}});
+
+  box.append(
+    el("div",{style:{fontSize:28,fontWeight:700,marginBottom:6}},
+      el("span",{style:{color:"#a78bfa"}},"Color"),
+      el("span",{}," Orders")
+    ),
+    el("div",{style:{fontSize:13,color:"#888",marginBottom:28}},"מערכת ניהול הזמנות")
+  );
+
+  const inp = el("input",{type:"password",className:"input",placeholder:"הזן סיסמה...",style:{marginBottom:14,fontSize:16,textAlign:"center"}});
+  const errMsg = el("div",{style:{color:"#f87171",fontSize:13,marginBottom:10,minHeight:18}});
+  const btn = el("button",{className:"btn btn-full",style:{background:"#a78bfa",color:"#fff",fontSize:16}},"כניסה");
+
+  const tryLogin = () => {
+    if(inp.value === APP_PASSWORD){
+      sessionStorage.setItem("auth", APP_PASSWORD);
+      render();
+    } else {
+      errMsg.textContent = "סיסמה שגויה";
+      inp.value = "";
+      inp.focus();
+    }
+  };
+
+  btn.addEventListener("click", tryLogin);
+  inp.addEventListener("keydown", e => { if(e.key==="Enter") tryLogin(); });
+
+  box.append(inp, errMsg, btn);
+  wrap.appendChild(box);
+  return wrap;
+}
+
 // ── DOM helpers ──
 function el(tag,props,...children){
   const e=document.createElement(tag);
@@ -162,6 +205,7 @@ function softRender(){
 function render(){
   const app=document.getElementById("app");
   app.innerHTML="";
+  if(!checkAuth()){app.appendChild(renderLogin());return;}
   app.appendChild(renderScreen());
   if(state.modal)app.appendChild(renderModal());
 }

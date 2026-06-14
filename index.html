@@ -310,15 +310,17 @@ function buildNewForm(serial,isEdit){
   otherInp.addEventListener("input",e=>{formData.otherMaterial=e.target.value;});
   otherWrap.appendChild(otherInp);
 
-  const saveBtn=el("button",{className:"btn btn-full",style:{background:C.p1,color:"#000",fontSize:16,marginTop:4}},"אישור — שמור הזמנה");
-  saveBtn.addEventListener("click",async()=>{
-    if(!formData.clientName||!formData.productName)return;
-    saveBtn.textContent="שומר...";saveBtn.disabled=true;
-    const newOrder={...formData,serial,createdAt:new Date().toISOString(),status:STATUS.OPEN,id:Date.now()};
-    state.orders=[...state.orders,newOrder];saveLocal(state.orders);
-    await syncOrder("save",newOrder);
-    formData={};state.screen="home";render();
-  });
+  const saveBtn=el("button",{className:"btn btn-full",style:{background:C.p1,color:"#000",fontSize:16,marginTop:4}},isEdit?"שמור שינויים":"אישור — שמור הזמנה");
+  if(!isEdit){
+    saveBtn.addEventListener("click",async()=>{
+      if(!formData.clientName||!formData.productName)return;
+      saveBtn.textContent="שומר...";saveBtn.disabled=true;
+      const newOrder={...formData,serial,createdAt:new Date().toISOString(),status:STATUS.OPEN,id:Date.now()};
+      state.orders=[...state.orders,newOrder];saveLocal(state.orders);
+      await syncOrder("save",newOrder);
+      formData={};state.screen="home";render();
+    });
+  }
 
   // panton image
   const imgWrap=el("div",{});
@@ -730,22 +732,21 @@ function renderEdit(){
     )
   );
 
-  // Build the same form
+  // Build the same form with isEdit=true (save button has no handler yet)
   const form=buildNewForm(o.serial,true);
 
-  // Replace save button behavior
-  const oldBtn=form.querySelector("button.btn.btn-full");
-  if(oldBtn){
-    oldBtn.textContent="שמור שינויים";
-    oldBtn.onclick=async()=>{
+  // Attach save handler to the button
+  const saveBtn=form.querySelector("button.btn.btn-full");
+  if(saveBtn){
+    saveBtn.addEventListener("click",async()=>{
       if(!formData.clientName||!formData.productName)return;
-      oldBtn.textContent="שומר...";oldBtn.disabled=true;
+      saveBtn.textContent="שומר...";saveBtn.disabled=true;
       const updated={...o,...formData,serial:o.serial,createdAt:o.createdAt,id:o.id,status:o.status};
       state.orders=state.orders.map(x=>x.id===o.id?updated:x);
       saveLocal(state.orders);
       await syncOrder("update",updated);
       state.editOrder=null;formData={};state.screen="execution";render();
-    };
+    });
   }
 
   wrap.appendChild(form);

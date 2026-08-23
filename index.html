@@ -814,176 +814,97 @@ function detectFormType(order) {
 function generateFormHTML(order, formType) {
   const today = new Date().toLocaleDateString("he-IL", {day:"2-digit",month:"2-digit",year:"numeric"});
   const isPET = formType === "pet";
-  
-  const sampleYes = order.hasSample === "כן";
-  const sampleNo = order.hasSample === "לא";
-  const sampleText = sampleYes ? "כן / <u><b>לא</b></u>" : (sampleNo ? "כן / <u><b>לא</b></u>" : "כן / לא");
-  const sampleCircle = sampleNo ? "כן / <u><b>לא</b></u>" : "כן / לא";
+  const sampleText = order.hasSample === "כן" ? "<b>כן</b> / לא" : "כן / <b>לא</b>";
+  const colorDesc = order.colorDescription || "";
+  const pantone = order.pantonNumber || "";
+  const pantoneRow = pantone ? ("<b>" + pantone + "</b>") : "";
+  const productName = order.productName || "";
+  const notes = order.notes || "";
+  const clientName = order.clientName || "";
+  const threading = order.threading || "";
+  const serial = order.serial || "";
+  const distributor = order.distributorName || "";
+  const project = order.projectName || "";
+  const sampleQty = isPET ? "2 ק\"ג" : "1 ק\"ג";
 
-  return `<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<title>טופס התאמת צבע - \${order.clientName}</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Heebo',Arial,sans-serif;direction:rtl;font-size:10pt;background:white;color:#000;}
-  .page{width:190mm;margin:0 auto;padding:10mm;}
-  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3mm;}
-  .logo-area .co{font-size:18pt;font-weight:900;color:#1a3a8f;letter-spacing:1px;}
-  .logo-area .addr{font-size:7.5pt;color:#333;line-height:1.5;}
-  .date-area{text-align:right;font-size:9pt;}
-  .date-line{display:flex;align-items:baseline;gap:2mm;justify-content:flex-end;}
-  .date-line span{border-bottom:1px solid #000;min-width:35mm;display:inline-block;text-align:center;font-weight:700;}
-  .title{text-align:center;font-size:15pt;font-weight:700;text-decoration:underline;margin:3mm 0 2mm;}
-  .subheader{display:flex;justify-content:space-between;font-size:8.5pt;margin-bottom:2mm;align-items:baseline;}
-  .sh-field{display:flex;gap:1mm;align-items:baseline;}
-  .sh-val{border-bottom:1px solid #000;min-width:38mm;display:inline-block;font-weight:700;text-align:center;}
-  .tapi{color:#00c;font-size:8pt;}
-  table{width:100%;border-collapse:collapse;font-size:9pt;}
-  td,th{border:1px solid #000;padding:2px 4px;vertical-align:middle;}
-  .num{width:8mm;text-align:center;font-size:8pt;color:#444;}
-  .lbl{background:#f0f0f0;text-align:right;font-size:9pt;padding:3px 5px;}
-  .val{min-height:8mm;padding:3px 5px;}
-  .val.tall{min-height:18mm;}
-  .val.filled{color:#00008b;font-weight:700;}
-  .print-btn{position:fixed;top:10px;left:10px;background:#6B5CE7;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:13pt;font-weight:700;z-index:999;}
-  .ref{font-size:7.5pt;color:#888;text-align:center;margin-top:2mm;}
-  @media print{.print-btn{display:none;}@page{size:A4;margin:10mm;}body{margin:0;}.page{width:100%;padding:0;}}
-</style>
-</head>
-<body>
-<button class="print-btn" onclick="window.print()">🖨️ הדפס / שמור PDF</button>
-<div class="page">
+  const polymerRow = isPET
+    ? "HPP / CPP / RPP / PE / PVC-RIGID / PVC-FLEX / PSCR / HIPS/<br>PMMA SAN / ABS / PC /PA /POM / <u><b>PET</b></u>/ PBT"
+    : "HPP / CPP / RPP / <u><b>PE</b></u>/ PVC-RIGID / PVC-FLEX / PSCR / HIPS/<br>PMMA SAN / ABS / PC /PA /POM / PET / PBT";
 
-<div class="header">
-  <div class="logo-area">
-    <div class="co">TOSAF</div>
-    <div class="addr">Industry Zone M. Tnuvot<br>P.O.B 52 Kfar Yona 40300<br>Tel 972-9-8984684 Fax 972-9-8984645</div>
-  </div>
-  <div class="date-area">
-    <div class="date-line"><span>\${today}</span> :תאריך</div>
-  </div>
-</div>
+  const processRow = isPET
+    ? "הזרקה / שיחול / <b>קאסט</b> / אחר"
+    : "<b>הזרקה</b> / <b>ניפוח</b> / שיחול / תרמופורמינג / קאסט / אחר";
 
-<div class="title">טופס להזמנת פיתוח צבע</div>
-
-<div class="subheader">
-  <div class="sh-field"><span class="tapi">0503902122 - תפי</span>&nbsp;&nbsp;:איש קשר</div>
-  <div class="sh-field">1984 :זנוה</div>
-  <div class="sh-field">:שם הלקוח &nbsp;<span class="sh-val">זנוה 1984</span></div>
-</div>
-
-<table>
-<tr>
-  <td class="val filled">\${order.colorDescription||""}</td>
-  <td class="lbl">:צבע מבוקש</td>
-  <td class="num">.1</td>
-</tr>
-<tr>
-  <td class="val">
-    דוגמא מצורפת : \${order.hasSample==="כן" ? "<b>כן</b> / לא" : "כן / <b>לא</b>"}<br>
-    :PANTONE &nbsp; צבע: <b>\${order.pantonNumber||"__________"}</b> &nbsp;&nbsp; אחר: __________
-  </td>
-  <td class="lbl">:סטנדרט</td>
-  <td class="num">.2</td>
-</tr>
-<tr>
-  <td class="val">מסחרית / <u>מדויקת</u> / מדויקת ביותר</td>
-  <td class="lbl">:סוג התאמה</td>
-  <td class="num">.3</td>
-</tr>
-<tr>
-  <td class="val filled">\${order.productName||""}</td>
-  <td class="lbl">:מוצר סופי</td>
-  <td class="num">.4</td>
-</tr>
-<tr>
-  <td class="val">
-    \${isPET
-      ? "הזרקה / שיחול / <b>קאסט</b> / אחר"
-      : "<b>הזרקה</b> / <b>ניפוח</b> / שיחול / תרמופורמינג / קאסט / אחר"}
-    \${order.threading ? "<br><b>" + order.threading + "</b>" : ""}
-  </td>
-  <td class="lbl">:תהליך עיבוד</td>
-  <td class="num">.5</td>
-</tr>
-<tr>
-  <td class="val" style="font-size:8.5pt;line-height:1.6;">
-    \${isPET
-      ? "HPP / CPP / RPP / PE / PVC-RIGID / PVC-FLEX / PSCR / HIPS/<br>PMMA SAN / ABS / PC /PA /POM / <u><b>PET</b></u>/ PBT"
-      : "HPP / CPP / RPP / <u><b>PE</b></u>/ PVC-RIGID / PVC-FLEX / PSCR / HIPS/<br>PMMA SAN / ABS / PC /PA /POM / PET / PBT"}
-    <br>אחר: ________________<br>
-    שילוב (שילוב בין חומרים לרוף HPP/CPP ויחסים בין השילוב): ________________
-  </td>
-  <td class="lbl">:פולימר למוצר הסופי</td>
-  <td class="num">.6</td>
-</tr>
-<tr>
-  <td class="val">כן / לא</td>
-  <td class="lbl">חו"ג מלקוח</td>
-  <td class="num">.7</td>
-</tr>
-<tr>
-  <td class="val">1/2/3/4/5/<u>6</u>/7/8</td>
-  <td class="lbl" style="font-size:8pt;">עמידות לאור<br>(מתייחסת לעמידות הצבע לדהייה עקב חשיפה לאור בלבד ללא קשר למזג האוויר, סקלה נמדדת בין 1 נמוך ביותר ל- 8 גבוה ביותר)</td>
-  <td class="num">.8</td>
-</tr>
-<tr>
-  <td class="val">260</td>
-  <td class="lbl" style="font-size:8pt;">טמפ׳ תהליך<br>(מתייחסת לטמפ׳ מקסימלית בתהליך העבודה)</td>
-  <td class="num">.9</td>
-</tr>
-<tr>
-  <td class="val">1/2/3/4/5</td>
-  <td class="lbl" style="font-size:8pt;">עמידות חיצונית<br>(מתייחסת לעמידות הצבע לדהייה עקב חשיפה חיצונית: מזג אוויר אוויר קיצוניים; חום, קור,לחות וכד׳. סקלה נמדדת בין 1 נמוך ביותר- 5 גבוה ביותר)</td>
-  <td class="num">.10</td>
-</tr>
-<tr>
-  <td class="val" style="min-height:20mm;">
-    לא &nbsp;|&nbsp; כן<br>
-    רגולציות נדרשות:<br>
-    EC/FDA / AP(89)1 / BFR : מזון<br>
-    אישור צצצועים<br>
-    הערד מתכות כבדות / ROHS<br>
-    אחר: ________________
-  </td>
-  <td class="lbl">:אישור מגע עם מזון</td>
-  <td class="num">.11</td>
-</tr>
-<tr>
-  <td class="val" style="min-height:18mm;">
-    כן / <u>לא</u><br>
-    במידה וכן יש לציין:<br>
-    עובי מוצר (מ"מ)- ________<br>
-    אחוז חשיפה בעולם - ________<br>
-    זמן הגנה נדרש (שנים)- ________
-  </td>
-  <td class="lbl">:תוספת הגנת UV</td>
-  <td class="num">.12</td>
-</tr>
-<tr>
-  <td class="val">1/<u>2</u>/3/4/5 &nbsp; אחר: ________________</td>
-  <td class="lbl" style="font-size:8pt;">:אחוז שימוש נדרש<br>(אחוז סופי יוחלץ בסיום פיתוח התרכיז בהתאם לאפקט גוון הנדרש)</td>
-  <td class="num">.13</td>
-</tr>
-<tr>
-  <td class="val filled">\${isPET ? "2 ק״ג" : "1 ק״ג"}</td>
-  <td class="lbl" style="font-size:8pt;">:כמות ניסיונית למשלוח (ק"ג)<br>(לדוגמה: התאמות עבור ABS מיועדות תמיד ל-5% שימוש, יריעות פילם 5%)</td>
-  <td class="num">.14</td>
-</tr>
-<tr>
-  <td class="val tall filled">\${order.notes||""}</td>
-  <td class="lbl">:הערות</td>
-  <td class="num">.15</td>
-</tr>
-</table>
-
-<div class="ref">מס׳ הזמנה: \${order.serial} | \${order.distributorName||""} | \${order.projectName||""}</div>
-</div>
-</body>
-</html>`;
+  const html = '<!DOCTYPE html>\n' +
+'<html lang="he" dir="rtl">\n' +
+'<head>\n' +
+'<meta charset="UTF-8">\n' +
+'<title>\u05d8\u05d5\u05e4\u05e1 \u05d4\u05ea\u05d0\u05de\u05ea \u05e6\u05d1\u05e2</title>\n' +
+'<style>\n' +
+'@import url(\'https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700&display=swap\');\n' +
+'*{box-sizing:border-box;margin:0;padding:0;}\n' +
+'body{font-family:\'Heebo\',Arial,sans-serif;direction:rtl;font-size:9pt;background:white;color:#000;}\n' +
+'.page{width:190mm;margin:0 auto;padding:8mm 10mm;}\n' +
+'.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4mm;}\n' +
+'.logo{font-size:22pt;font-weight:900;color:#1a3a8f;letter-spacing:2px;}\n' +
+'.addr{font-size:7.5pt;color:#333;line-height:1.5;text-align:left;}\n' +
+'.date-area{text-align:right;font-size:9pt;}\n' +
+'.date-val{border-bottom:1px solid #000;min-width:32mm;display:inline-block;font-weight:700;text-align:center;padding-bottom:1px;}\n' +
+'.title{text-align:center;font-size:14pt;font-weight:700;text-decoration:underline;margin:3mm 0 2mm;}\n' +
+'.subhdr{display:flex;justify-content:space-between;font-size:8.5pt;margin-bottom:2mm;border-bottom:1px solid #ccc;padding-bottom:2mm;}\n' +
+'.sh-field{display:flex;gap:2mm;align-items:baseline;}\n' +
+'.sh-val{border-bottom:1px solid #000;min-width:40mm;display:inline-block;font-weight:700;text-align:center;}\n' +
+'.tapi{color:#00c;}\n' +
+'table{width:100%;border-collapse:collapse;font-size:8.5pt;}\n' +
+'td{border:1px solid #000;padding:3px 5px;vertical-align:middle;}\n' +
+'.num{width:7mm;text-align:center;font-size:8pt;color:#444;background:#f9f9f9;}\n' +
+'.lbl{width:42%;text-align:right;background:#f5f5f5;font-size:8.5pt;}\n' +
+'.val{min-height:7mm;}\n' +
+'.val.tall{min-height:16mm;vertical-align:top;padding-top:3px;}\n' +
+'.val.filled{color:#00008b;font-weight:700;}\n' +
+'.print-btn{position:fixed;top:10px;left:10px;background:#6B5CE7;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:12pt;font-weight:700;z-index:999;}\n' +
+'.ref{font-size:7pt;color:#999;text-align:center;margin-top:2mm;border-top:1px solid #eee;padding-top:1mm;}\n' +
+'@media print{.print-btn{display:none;}@page{size:A4;margin:8mm;}}\n' +
+'</style>\n' +
+'</head>\n' +
+'<body>\n' +
+'<button class="print-btn" onclick="window.print()">\u05d4\u05d3\u05e4\u05e1 / \u05e9\u05de\u05d5\u05e8 PDF</button>\n' +
+'<div class="page">\n' +
+'<div class="header">\n' +
+'  <div>\n' +
+'    <div class="logo">TOSAF</div>\n' +
+'    <div class="addr">Industry Zone M. Tnuvot<br>P.O.B 52 Kfar Yona 40300<br>Tel 972-9-8984684 Fax 972-9-8984645</div>\n' +
+'  </div>\n' +
+'  <div class="date-area"><span class="date-val">' + today + '</span> :\u05ea\u05d0\u05e8\u05d9\u05da</div>\n' +
+'</div>\n' +
+'<div class="title">\u05d8\u05d5\u05e4\u05e1 \u05dc\u05d4\u05d6\u05de\u05e0\u05ea \u05e4\u05d9\u05ea\u05d5\u05d7 \u05e6\u05d1\u05e2</div>\n' +
+'<div class="subhdr">\n' +
+'  <div class="sh-field"><span class="tapi">0503902122 - \u05ea\u05e4\u05d9</span>&nbsp;&nbsp;:\u05d0\u05d9\u05e9 \u05e7\u05e9\u05e8</div>\n' +
+'  <div class="sh-field">1984 :\u05d6\u05e0\u05d5\u05d4</div>\n' +
+'  <div class="sh-field">:\u05e9\u05dd \u05d4\u05dc\u05e7\u05d5\u05d7 &nbsp;<span class="sh-val">\u05d6\u05e0\u05d5\u05d4 1984</span></div>\n' +
+'</div>\n' +
+'<table>\n' +
+'<tr><td class="val filled">' + colorDesc + '</td><td class="lbl">:\u05e6\u05d1\u05e2 \u05de\u05d1\u05d5\u05e7\u05e9</td><td class="num">.1</td></tr>\n' +
+'<tr><td class="val">\u05d3\u05d5\u05d2\u05de\u05d0 \u05de\u05e6\u05d5\u05e8\u05e4\u05ea : ' + sampleText + '<br>\u05e6\u05d1\u05e2: <b>' + colorDesc + '</b> &nbsp;&nbsp; :PANTONE ' + pantoneRow + '</td><td class="lbl">:\u05e1\u05d8\u05e0\u05d3\u05e8\u05d8</td><td class="num">.2</td></tr>\n' +
+'<tr><td class="val">\u05de\u05e1\u05d7\u05e8\u05d9\u05ea / <u>\u05de\u05d3\u05d5\u05d9\u05e7\u05ea</u> / \u05de\u05d3\u05d5\u05d9\u05e7\u05ea \u05d1\u05d9\u05d5\u05ea\u05e8</td><td class="lbl">:\u05e1\u05d5\u05d2 \u05d4\u05ea\u05d0\u05de\u05d4</td><td class="num">.3</td></tr>\n' +
+'<tr><td class="val filled">' + productName + '</td><td class="lbl">:\u05de\u05d5\u05e6\u05e8 \u05e1\u05d5\u05e4\u05d9</td><td class="num">.4</td></tr>\n' +
+'<tr><td class="val">' + processRow + (threading ? "<br><b>" + threading + "</b>" : "") + '</td><td class="lbl">:\u05ea\u05d4\u05dc\u05d9\u05da \u05e2\u05d9\u05d1\u05d5\u05d3</td><td class="num">.5</td></tr>\n' +
+'<tr><td class="val" style="font-size:8pt;line-height:1.6;">' + polymerRow + '<br>\u05d0\u05d7\u05e8: ________________<br>\u05e9\u05d9\u05dc\u05d5\u05d1 (\u05e9\u05d9\u05dc\u05d5\u05d1 \u05d1\u05d9\u05df \u05d7\u05d5\u05de\u05e8\u05d9\u05dd \u05dc\u05e8\u05d5\u05e3 HPP/CPP \u05d5\u05d9\u05d7\u05e1\u05d9\u05dd \u05d1\u05d9\u05df \u05d4\u05e9\u05d9\u05dc\u05d5\u05d1): ________________</td><td class="lbl">:\u05e4\u05d5\u05dc\u05d9\u05de\u05e8 \u05dc\u05de\u05d5\u05e6\u05e8 \u05d4\u05e1\u05d5\u05e4\u05d9</td><td class="num">.6</td></tr>\n' +
+'<tr><td class="val">\u05db\u05df / \u05dc\u05d0</td><td class="lbl">\u05d7\u05d5"\u05d2 \u05de\u05dc\u05e7\u05d5\u05d7</td><td class="num">.7</td></tr>\n' +
+'<tr><td class="val">1/2/3/4/5/<u>6</u>/7/8</td><td class="lbl" style="font-size:7.5pt;">\u05e2\u05de\u05d9\u05d3\u05d5\u05ea \u05dc\u05d0\u05d5\u05e8<br>(\u05de\u05ea\u05d9\u05d9\u05d7\u05e1\u05ea \u05dc\u05e2\u05de\u05d9\u05d3\u05d5\u05ea \u05d4\u05e6\u05d1\u05e2 \u05dc\u05d3\u05d4\u05d9\u05d9\u05d4 \u05e2\u05e7\u05d1 \u05d7\u05e9\u05d9\u05e4\u05d4 \u05dc\u05d0\u05d5\u05e8 \u05d1\u05dc\u05d1\u05d3 \u05dc\u05dc\u05d0 \u05e7\u05e9\u05e8 \u05dc\u05de\u05d6\u05d2 \u05d4\u05d0\u05d5\u05d5\u05d9\u05e8, \u05e1\u05e7\u05dc\u05d4 \u05e0\u05de\u05d3\u05d3\u05ea \u05d1\u05d9\u05df 1 \u05e0\u05de\u05d5\u05da \u05d1\u05d9\u05d5\u05ea\u05e8 \u05dc- 8 \u05d2\u05d1\u05d5\u05d4 \u05d1\u05d9\u05d5\u05ea\u05e8)</td><td class="num">.8</td></tr>\n' +
+'<tr><td class="val">260</td><td class="lbl" style="font-size:7.5pt;">\u05d8\u05de\u05e4\u05f4 \u05ea\u05d4\u05dc\u05d9\u05da<br>(\u05de\u05ea\u05d9\u05d9\u05d7\u05e1\u05ea \u05dc\u05d8\u05de\u05e4\u05f4 \u05de\u05e7\u05e1\u05d9\u05de\u05dc\u05d9\u05ea \u05d1\u05ea\u05d4\u05dc\u05d9\u05da \u05d4\u05e2\u05d1\u05d5\u05d3\u05d4)</td><td class="num">.9</td></tr>\n' +
+'<tr><td class="val">1/2/3/4/5</td><td class="lbl" style="font-size:7.5pt;">\u05e2\u05de\u05d9\u05d3\u05d5\u05ea \u05d7\u05d9\u05e6\u05d5\u05e0\u05d9\u05ea<br>(\u05de\u05ea\u05d9\u05d9\u05d7\u05e1\u05ea \u05dc\u05e2\u05de\u05d9\u05d3\u05d5\u05ea \u05d4\u05e6\u05d1\u05e2 \u05dc\u05d3\u05d4\u05d9\u05d9\u05d4 \u05e2\u05e7\u05d1 \u05d7\u05e9\u05d9\u05e4\u05d4 \u05d7\u05d9\u05e6\u05d5\u05e0\u05d9\u05ea: \u05de\u05d6\u05d2 \u05d0\u05d5\u05d5\u05d9\u05e8 \u05d0\u05d5\u05d5\u05d9\u05e8 \u05e7\u05d9\u05e6\u05d5\u05e0\u05d9\u05d9\u05dd; \u05d7\u05d5\u05dd, \u05e7\u05d5\u05e8,\u05dc\u05d7\u05d5\u05ea \u05d5\u05db\u05d3\u05f4. \u05e1\u05e7\u05dc\u05d4 \u05e0\u05de\u05d3\u05d3\u05ea \u05d1\u05d9\u05df 1 \u05e0\u05de\u05d5\u05da \u05d1\u05d9\u05d5\u05ea\u05e8- 5 \u05d2\u05d1\u05d5\u05d4 \u05d1\u05d9\u05d5\u05ea\u05e8)</td><td class="num">.10</td></tr>\n' +
+'<tr><td class="val" style="min-height:18mm;vertical-align:top;">\u05dc\u05d0 | \u05db\u05df<br>\u05e8\u05d2\u05d5\u05dc\u05e6\u05d9\u05d5\u05ea \u05e0\u05d3\u05e8\u05e9\u05d5\u05ea:<br>EC/FDA / AP(89)1 / BFR : \u05de\u05d6\u05d5\u05df<br>\u05d0\u05d9\u05e9\u05d5\u05e8 \u05e6\u05e6\u05e6\u05d5\u05e2\u05d9\u05dd<br>\u05d4\u05e2\u05e8\u05d3 \u05de\u05ea\u05db\u05d5\u05ea \u05db\u05d1\u05d3\u05d5\u05ea / ROHS<br>\u05d0\u05d7\u05e8: ________________</td><td class="lbl">:\u05d0\u05d9\u05e9\u05d5\u05e8 \u05de\u05d2\u05e2 \u05e2\u05dd \u05de\u05d6\u05d5\u05df</td><td class="num">.11</td></tr>\n' +
+'<tr><td class="val" style="min-height:16mm;vertical-align:top;">\u05db\u05df / <u>\u05dc\u05d0</u><br>\u05d1\u05de\u05d9\u05d3\u05d4 \u05d5\u05db\u05df \u05d9\u05e9 \u05dc\u05e6\u05d9\u05d9\u05df:<br>\u05e2\u05d5\u05d1\u05d9 \u05de\u05d5\u05e6\u05e8 (\u05de"\u05de)- ________<br>\u05d0\u05d7\u05d5\u05d6 \u05d7\u05e9\u05d9\u05e4\u05d4 \u05d1\u05e2\u05d5\u05dc\u05dd - ________<br>\u05d6\u05de\u05df \u05d4\u05d2\u05e0\u05d4 \u05e0\u05d3\u05e8\u05e9 (\u05e9\u05e0\u05d9\u05dd)- ________</td><td class="lbl">:\u05ea\u05d5\u05e1\u05e4\u05ea \u05d4\u05d2\u05e0\u05ea UV</td><td class="num">.12</td></tr>\n' +
+'<tr><td class="val">1/<u>2</u>/3/4/5 &nbsp; \u05d0\u05d7\u05e8: ________________</td><td class="lbl" style="font-size:7.5pt;">:\u05d0\u05d7\u05d5\u05d6 \u05e9\u05d9\u05de\u05d5\u05e9 \u05e0\u05d3\u05e8\u05e9<br>(\u05d0\u05d7\u05d5\u05d6 \u05e1\u05d5\u05e4\u05d9 \u05d9\u05d5\u05d7\u05dc\u05e5 \u05d1\u05e1\u05d9\u05d5\u05dd \u05e4\u05d9\u05ea\u05d5\u05d7 \u05d4\u05ea\u05e8\u05db\u05d9\u05d6 \u05d1\u05d4\u05ea\u05d0\u05dd \u05dc\u05d0\u05e4\u05e7\u05d8 \u05d2\u05d5\u05d5\u05df \u05d4\u05e0\u05d3\u05e8\u05e9)</td><td class="num">.13</td></tr>\n' +
+'<tr><td class="val">' + sampleQty + '</td><td class="lbl" style="font-size:7.5pt;">:\u05db\u05de\u05d5\u05ea \u05e0\u05d9\u05e1\u05d9\u05d5\u05e0\u05d9\u05ea \u05dc\u05de\u05e9\u05dc\u05d5\u05d7 (\u05e7"\u05d2)<br>(\u05dc\u05d3\u05d5\u05d2\u05de\u05d4: \u05d4\u05ea\u05d0\u05de\u05d5\u05ea \u05e2\u05d1\u05d5\u05e8 ABS \u05de\u05d9\u05d5\u05e2\u05d3\u05d5\u05ea \u05ea\u05de\u05d9\u05d3 \u05dc-5% \u05e9\u05d9\u05de\u05d5\u05e9, \u05d9\u05e8\u05d9\u05e2\u05d5\u05ea \u05e4\u05d9\u05dc\u05dd 5%)</td><td class="num">.14</td></tr>\n' +
+'<tr><td class="val tall"></td><td class="lbl">:\u05d4\u05e2\u05e8\u05d5\u05ea</td><td class="num">.15</td></tr>\n' +
+'</table>\n' +
+'<div class="ref">\u05de\u05e1\u05f4 \u05d4\u05d6\u05de\u05e0\u05d4: ' + serial + ' | ' + distributor + ' | ' + project + '</div>\n' +
+'</div>\n' +
+'</body>\n' +
+'</html>';
+  return html;
 }
 function openFormForOrder(order) {
   const formType = detectFormType(order);

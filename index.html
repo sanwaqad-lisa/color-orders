@@ -447,7 +447,9 @@ function renderExecution(){
           formData=JSON.parse(JSON.stringify(o));
           state.screen="edit";render();
         });
-        actions.append(doneBtn,cancelBtn,editBtn);card.appendChild(actions);
+        const formBtn=el("button",{className:"btn btn-flex",style:{background:"transparent",border:`1px solid #9333ea`,color:"#9333ea"}},"📄 הפקת בקשה");
+        formBtn.addEventListener("click",e=>{e.stopPropagation();openFormForOrder(o);});
+        actions.append(doneBtn,cancelBtn,editBtn,formBtn);card.appendChild(actions);
       }
       listDiv.appendChild(card);
     });
@@ -795,6 +797,237 @@ function deduplicateOrders(orders){
     if(!map[key]||o.id>map[key].id) map[key]=o;
   });
   return Object.values(map);
+}
+
+
+// ── PDF FORM GENERATION ─────────────────────────────────────────────────────
+
+function detectFormType(order) {
+  const materials = order.rawMaterials || [];
+  if (materials.includes("PET")) return "pet";
+  return "pe_pp"; // default: PE, PP, or others
+}
+
+function generateFormHTML(order, formType) {
+  const today = new Date().toLocaleDateString("he-IL", {day:"2-digit",month:"2-digit",year:"numeric"});
+  const isPET = formType === "pet";
+  
+  const polymerRow = isPET
+    ? `HPP / CPP / RPP / PE / PVC-RIGID / PVC-FLEX / PSCR / HIPS/<br>PMMA SAN / ABS / PC /PA /POM / <u><b>PET</b></u>/ PBT`
+    : `HPP / CPP / RPP / <u><b>PE</b></u>/ PVC-RIGID / PVC-FLEX / PSCR / HIPS/<br>PMMA SAN / ABS / PC /PA /POM / PET / PBT`;
+    
+  const processType = isPET 
+    ? "הזרקה / שיחול / קאסט / אחר"
+    : `<u>הזרקה</u> / <u>ניפוח</u>/ שיחול / תרמופורמינג / קאסט / אחר`;
+
+  const sampleQty = isPET ? "2 ק״ג" : "1 ק״ג";
+  
+  // Build materials display
+  const mats = (order.rawMaterials||[]).join(", ");
+  const processDisplay = order.threading || "";
+  const finishDisplay = [order.finish, order.flexibility].filter(Boolean).join(", ");
+
+  return `<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>טופס התאמת צבע - ${order.clientName}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Heebo', Arial, sans-serif; direction: rtl; font-size: 10px; background: white; color: #000; }
+  .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 8mm 10mm; }
+  
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4mm; border-bottom: 1px solid #000; padding-bottom: 3mm; }
+  .header-logo { text-align: left; }
+  .header-logo .company { font-size: 16px; font-weight: 700; color: #1a3a6e; }
+  .header-logo .address { font-size: 8px; color: #444; line-height: 1.4; }
+  .header-date { text-align: right; font-size: 9px; }
+  .header-date .label { color: #666; }
+  .header-date .value { font-weight: 700; font-size: 11px; border-bottom: 1px solid #000; padding-bottom: 1px; min-width: 30mm; display: inline-block; }
+  
+  .title { text-align: center; font-size: 16px; font-weight: 700; text-decoration: underline; margin: 3mm 0; }
+  
+  .sub-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2mm; font-size: 9px; }
+  .sub-header .field { display: flex; gap: 2mm; align-items: baseline; }
+  .sub-header .label { color: #555; white-space: nowrap; }
+  .sub-header .value { font-weight: 600; border-bottom: 1px solid #000; min-width: 40mm; padding-bottom: 1px; }
+  .sub-header .tapi { color: #0000cc; font-size: 8px; }
+  
+  table { width: 100%; border-collapse: collapse; font-size: 9px; }
+  td, th { border: 1px solid #000; padding: 2px 4px; vertical-align: top; }
+  .row-num { width: 6mm; text-align: center; font-size: 8px; color: #444; border-left: 1px solid #000; }
+  .row-label { width: 45%; text-align: right; background: #f5f5f5; font-size: 9px; }
+  .row-entry { width: 55%; min-height: 7mm; }
+  .row-entry.filled { font-weight: 600; color: #1a1a6e; font-size: 10px; }
+  .row-entry.tall { min-height: 14mm; }
+  
+  .circle-option { display: inline; }
+  .circle-option.selected { text-decoration: underline; font-weight: 700; }
+  
+  .footer-note { margin-top: 3mm; font-size: 8px; color: #555; text-align: center; border-top: 1px solid #ccc; padding-top: 2mm; }
+  .order-ref { font-size: 8px; color: #888; margin-top: 1mm; text-align: center; }
+  
+  @media print {
+    body { margin: 0; }
+    .page { margin: 0; padding: 8mm 10mm; width: 100%; }
+    .no-print { display: none; }
+    @page { size: A4; margin: 0; }
+  }
+  
+  .print-btn { 
+    position: fixed; top: 10px; left: 10px; z-index: 999;
+    background: #6B5CE7; color: white; border: none; 
+    padding: 10px 20px; border-radius: 8px; cursor: pointer;
+    font-family: Heebo; font-size: 14px; font-weight: 700;
+  }
+</style>
+</head>
+<body>
+<button class="print-btn no-print" onclick="window.print()">🖨️ הדפס / שמור PDF</button>
+
+<div class="page">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-logo">
+      <div class="company">TOSAF</div>
+      <div class="address">
+        Industry Zone M. Tnuvot<br>
+        P.O.B 52 Kfar Yona 40300<br>
+        Tel 972-9-8984684 Fax 972-9-8984645
+      </div>
+    </div>
+    <div class="header-date">
+      <div class="label">:תאריך</div>
+      <div class="value">${today}</div>
+    </div>
+  </div>
+  
+  <div class="title">טופס להזמנת פיתוח צבע</div>
+  
+  <!-- SUB HEADER -->
+  <div class="sub-header">
+    <div class="field">
+      <span class="tapi">0503902122 - תפי</span>
+      <span class="label">:איש קשר</span>
+    </div>
+    <div class="field">
+      <span class="label">1984 :זנוה</span>
+    </div>
+    <div class="field">
+      <span class="label">:שם הלקוח</span>
+      <span class="value">${order.clientName || ""}</span>
+    </div>
+  </div>
+  
+  <!-- TABLE -->
+  <table>
+    <tr>
+      <td class="row-entry filled">${order.colorDescription || ""}</td>
+      <td class="row-label">:צבע מבוקש</td>
+      <td class="row-num">.1</td>
+    </tr>
+    <tr>
+      <td class="row-entry">
+        דוגמא מצורפת : כן / לא<br>
+        :PANTONE צבע: <b>${order.pantonNumber || "__________"}</b> &nbsp;&nbsp; אחר: __________
+      </td>
+      <td class="row-label">:סטנדרט</td>
+      <td class="row-num">.2</td>
+    </tr>
+    <tr>
+      <td class="row-entry">מסחרית / <u>מדויקת</u>/ מדויקת ביותר</td>
+      <td class="row-label">:סוג התאמה</td>
+      <td class="row-num">.3</td>
+    </tr>
+    <tr>
+      <td class="row-entry filled">${order.productName || ""}</td>
+      <td class="row-label">:מוצר סופי</td>
+      <td class="row-num">.4</td>
+    </tr>
+    <tr>
+      <td class="row-entry">${processDisplay || "הזרקה / ניפוח / שיחול / אחר"}</td>
+      <td class="row-label">:תהליך עיבוד</td>
+      <td class="row-num">.5</td>
+    </tr>
+    <tr>
+      <td class="row-entry" style="font-size:8px;">${polymerRow}<br>אחר: ________________<br>שילוב (שילוב בין חומרים לרוף HPP/CPP ויחסים בין השילוב): ________________</td>
+      <td class="row-label">:פולימר למוצר הסופי</td>
+      <td class="row-num">.6</td>
+    </tr>
+    <tr>
+      <td class="row-entry">כן / לא</td>
+      <td class="row-label">חו"ג מלקוח</td>
+      <td class="row-num">.7</td>
+    </tr>
+    <tr>
+      <td class="row-entry">1/2/3/4/5/<u>6</u>/7/8</td>
+      <td class="row-label">עמידות לאור</td>
+      <td class="row-num">.8</td>
+    </tr>
+    <tr>
+      <td class="row-entry">260</td>
+      <td class="row-label">טמפ׳ תהליך</td>
+      <td class="row-num">.9</td>
+    </tr>
+    <tr>
+      <td class="row-entry">1/2/3/4/5</td>
+      <td class="row-label">עמידות חיצונית</td>
+      <td class="row-num">.10</td>
+    </tr>
+    <tr>
+      <td class="row-entry" style="min-height:16mm;">
+        לא | כן<br>
+        רגולציות נדרשות:<br>
+        EC/FDA / AP(89)1 / BFR : מזון<br>
+        אישור צצצועים<br>
+        הערד מתכות כבדות / ROHS<br>
+        אחר: ________________
+      </td>
+      <td class="row-label">:אישור מגע עם מזון</td>
+      <td class="row-num">.11</td>
+    </tr>
+    <tr>
+      <td class="row-entry" style="min-height:14mm;">
+        כן / לא<br>
+        במידה וכן יש לציין:<br>
+        עובי מוצר (מ"מ)- ________<br>
+        אחוז חשיפה בעולם - ________<br>
+        זמן הגנה נדרש (שנים)- ________
+      </td>
+      <td class="row-label">:תוספת הגנת UV</td>
+      <td class="row-num">.12</td>
+    </tr>
+    <tr>
+      <td class="row-entry">1/<u>2</u>/3/4/5 אחר: ________________</td>
+      <td class="row-label">:אחוז שימוש נדרש</td>
+      <td class="row-num">.13</td>
+    </tr>
+    <tr>
+      <td class="row-entry filled">${sampleQty}</td>
+      <td class="row-label">:כמות ניסיונית למשלוח</td>
+      <td class="row-num">.14</td>
+    </tr>
+    <tr>
+      <td class="row-entry tall filled">${order.notes || ""}</td>
+      <td class="row-label">:הערות</td>
+      <td class="row-num">.15</td>
+    </tr>
+  </table>
+  
+  <div class="footer-note">טופס זה הופק אוטומטית ממערכת Color Orders</div>
+  <div class="order-ref">מס׳ הזמנה: ${order.serial} | פרויקט: ${order.projectName||""} | מוצר: ${order.productName||""}</div>
+</div>
+</body>
+</html>`;
+}
+
+function openFormForOrder(order) {
+  const formType = detectFormType(order);
+  const html = generateFormHTML(order, formType);
+  const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
 }
 
 async function init(){

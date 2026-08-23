@@ -76,6 +76,7 @@ textarea.input{resize:vertical;}
 <div id="app"></div>
 <script>
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXcf6PrSdLjOMtlAH9GTZMp9v57ir2YDSh1sR4IdlpzfcfySGe_E5D2IDxxH3Pomtm/exec";
+const ARCHIVE_URL = "https://script.google.com/macros/s/AKfycbzpN2_wP4W7sHHLGMtKNtlwkUGjz8xNr7nuEfUZRb9BrqqJWyL5WvBHnw_DDNhQen-w/exec";
 
 const STATUS={OPEN:"פתוח",PENDING:"ממתין לאישור לקוח",APPROVED:"מאושר",REJECTED:"נדחה",CANCELLED:"בוטל"};
 const RAW_MATERIALS=["PE","PP","PET","PCR","TPE","PMMA","GLASS","ALUMINIUM","OTHER"];
@@ -247,7 +248,8 @@ function renderHome(){
         el("div",{style:{fontSize:13,color:"#888",marginTop:6,display:"flex",alignItems:"center",justifyContent:"center",gap:10}},
           el("span",{},state.orders.length+" הזמנות"),
           el("span",{id:"sync-dot",className:"sync-dot"},""),
-          APPS_SCRIPT_URL?el("button",{style:{background:"none",border:"1px solid #ccc",borderRadius:6,padding:"2px 10px",color:"#666",cursor:"pointer",fontFamily:"Heebo",fontSize:12},onClick:manualSync},"סנכרן"):null
+          APPS_SCRIPT_URL?el("button",{style:{background:"none",border:"1px solid #ccc",borderRadius:6,padding:"2px 10px",color:"#666",cursor:"pointer",fontFamily:"Heebo",fontSize:12},onClick:manualSync},"סנכרן"):null,
+          ARCHIVE_URL?el("button",{style:{background:"none",border:"1px solid #a78bfa",borderRadius:6,padding:"2px 10px",color:"#a78bfa",cursor:"pointer",fontFamily:"Heebo",fontSize:12},onClick:async()=>{await syncAllToArchive();}},"סנכרן ארכיון"):null
         )
       ),
       navBtn("📋","פתיחת הזמנה","יצירת הזמנה",C.p1,"new",0),
@@ -417,7 +419,7 @@ function renderExecution(){
   function buildRows(filteredList){
     listDiv.innerHTML="";
     if(filteredList.length===0){listDiv.appendChild(el("div",{className:"empty"},"אין הזמנות פתוחות"));return;}
-    filteredList.forEach(o=>{
+    [...filteredList].reverse().forEach(o=>{
       const sel=state.selectedId===o.id;
       const card=el("div",{className:"card order-row",style:{border:`1px solid ${sel?C.p2:"#e0e0e0"}`,marginBottom:10}});
       card.addEventListener("click",()=>{state.selectedId=sel?null:o.id;buildRows(filterOrders(allOrders,state.searchQ));});
@@ -512,7 +514,7 @@ function renderApproval(){
   function buildRows(filteredList){
     listDiv.innerHTML="";
     if(filteredList.length===0){listDiv.appendChild(el("div",{className:"empty"},"אין הזמנות ממתינות לאישור"));return;}
-    filteredList.forEach(o=>{
+    [...filteredList].reverse().forEach(o=>{
       const sel=state.selectedId===o.id;
       const card=el("div",{className:"card order-row",style:{border:`1px solid ${sel?C.p3:"#e0e0e0"}`,marginBottom:10}});
       card.addEventListener("click",()=>{state.selectedId=sel?null:o.id;buildRows(filterOrders(allOrders,state.searchQ));});
@@ -603,7 +605,7 @@ function renderArchive(){
     const filtered=filterOrders(state.orders.filter(o=>tab==="approved"?o.status===STATUS.APPROVED:o.status===STATUS.REJECTED||o.status===STATUS.CANCELLED),q);
     listDiv.innerHTML="";
     if(filtered.length===0){listDiv.appendChild(el("div",{className:"empty"},"אין הזמנות בקטגוריה זו"));return;}
-    filtered.forEach(o=>{
+    [...filtered].reverse().forEach(o=>{
       listDiv.appendChild(el("div",{className:"card",style:{marginBottom:10}},
         el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
           el("div",{},
@@ -664,7 +666,7 @@ function renderModal(){
       el("div",{className:"modal-title"},"אישור ביצוע"),
       el("div",{style:{color:"#666",marginBottom:18,fontSize:14}},"ההזמנה תועבר לסטטוס \"ממתין לאישור לקוח\""),
       el("div",{style:{display:"flex",gap:10}},
-        btnEl("✓ אשר ביצוע",C.success,"#000",async()=>{updateOrder(m.order.id,{status:STATUS.PENDING});await syncOrder("update",getOrder(m.order.id));state.modal=null;state.selectedId=null;render();}),
+        btnEl("✓ אשר ביצוע",C.success,"#000",async()=>{updateOrder(m.order.id,{status:STATUS.PENDING});const updPend=getOrder(m.order.id);await syncOrder("update",updPend);await syncToArchive(updPend);state.modal=null;state.selectedId=null;render();}),
         btnEl("חזור","transparent","#aaa",close,true)
       )
     );
@@ -676,7 +678,7 @@ function renderModal(){
       el("div",{className:"modal-title"},"סיבת ביטול"),
       el("div",{className:"field"},el("div",{className:"label"},"פרט סיבת ביטול"),ta),
       el("div",{style:{display:"flex",gap:10}},
-        btnEl("אישור ביטול",C.danger,"#fff",async()=>{if(!m.reason)return;updateOrder(m.order.id,{status:STATUS.CANCELLED,cancelReason:m.reason});await syncOrder("update",getOrder(m.order.id));state.modal=null;state.selectedId=null;render();}),
+        btnEl("אישור ביטול",C.danger,"#fff",async()=>{if(!m.reason)return;updateOrder(m.order.id,{status:STATUS.CANCELLED,cancelReason:m.reason});const updCancel=getOrder(m.order.id);await syncOrder("update",updCancel);await syncToArchive(updCancel);state.modal=null;state.selectedId=null;render();}),
         btnEl("חזור","transparent","#aaa",close,true)
       )
     );
@@ -688,7 +690,7 @@ function renderModal(){
       el("div",{className:"modal-title"},"אישור לקוח — מק״ט צבע"),
       el("div",{className:"field"},el("div",{className:"label"},"מק״ט צבע"),inp),
       el("div",{style:{display:"flex",gap:10}},
-        btnEl("✓ אשר",C.success,"#000",async()=>{if(!m.sku)return;updateOrder(m.order.id,{status:STATUS.APPROVED,colorSku:m.sku});await syncOrder("update",getOrder(m.order.id));state.modal=null;state.selectedId=null;render();}),
+        btnEl("✓ אשר",C.success,"#000",async()=>{if(!m.sku)return;updateOrder(m.order.id,{status:STATUS.APPROVED,colorSku:m.sku});const updAppr=getOrder(m.order.id);await syncOrder("update",updAppr);await syncToArchive(updAppr);state.modal=null;state.selectedId=null;render();}),
         btnEl("חזור","transparent","#aaa",close,true)
       )
     );
@@ -701,7 +703,7 @@ function renderModal(){
       el("div",{className:"modal-title"},"סיבת דחייה"),
       el("div",{className:"field"},el("div",{className:"label"},"פרט סיבת דחייה"),ta),
       el("div",{style:{display:"flex",gap:10}},
-        btnEl("אשר דחייה",C.danger,"#fff",async()=>{if(!m.reason)return;updateOrder(m.order.id,{status:STATUS.REJECTED,rejectReason:m.reason});await syncOrder("update",getOrder(m.order.id));state.modal=null;state.selectedId=null;render();}),
+        btnEl("אשר דחייה",C.danger,"#fff",async()=>{if(!m.reason)return;updateOrder(m.order.id,{status:STATUS.REJECTED,rejectReason:m.reason});const updRej=getOrder(m.order.id);await syncOrder("update",updRej);await syncOrder("update",updRej);await syncToArchive(updRej);state.modal=null;state.selectedId=null;render();}),
         btnEl("חזור","transparent","#aaa",close,true)
       )
     );
@@ -775,6 +777,7 @@ function renderEdit(){
       // Deduplicate then sync
       state.orders=deduplicateOrders(state.orders);
       saveLocal(state.orders);
+      await syncToArchive(updated);
       if(APPS_SCRIPT_URL){
         state.syncStatus="syncing";softRender();
         const res=await sheetsPost("syncAll",{orders:state.orders});
@@ -812,222 +815,206 @@ function generateFormHTML(order, formType) {
   const today = new Date().toLocaleDateString("he-IL", {day:"2-digit",month:"2-digit",year:"numeric"});
   const isPET = formType === "pet";
   
-  const polymerRow = isPET
-    ? `HPP / CPP / RPP / PE / PVC-RIGID / PVC-FLEX / PSCR / HIPS/<br>PMMA SAN / ABS / PC /PA /POM / <u><b>PET</b></u>/ PBT`
-    : `HPP / CPP / RPP / <u><b>PE</b></u>/ PVC-RIGID / PVC-FLEX / PSCR / HIPS/<br>PMMA SAN / ABS / PC /PA /POM / PET / PBT`;
-    
-  const processType = isPET 
-    ? "הזרקה / שיחול / קאסט / אחר"
-    : `<u>הזרקה</u> / <u>ניפוח</u>/ שיחול / תרמופורמינג / קאסט / אחר`;
-
-  const sampleQty = isPET ? "2 ק״ג" : "1 ק״ג";
-  
-  // Build materials display
-  const mats = (order.rawMaterials||[]).join(", ");
-  const processDisplay = order.threading || "";
-  const finishDisplay = [order.finish, order.flexibility].filter(Boolean).join(", ");
+  const sampleYes = order.hasSample === "כן";
+  const sampleNo = order.hasSample === "לא";
+  const sampleText = sampleYes ? "כן / <u><b>לא</b></u>" : (sampleNo ? "כן / <u><b>לא</b></u>" : "כן / לא");
+  const sampleCircle = sampleNo ? "כן / <u><b>לא</b></u>" : "כן / לא";
 
   return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>טופס התאמת צבע - ${order.clientName}</title>
+<title>טופס התאמת צבע - \${order.clientName}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Heebo', Arial, sans-serif; direction: rtl; font-size: 10px; background: white; color: #000; }
-  .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 8mm 10mm; }
-  
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4mm; border-bottom: 1px solid #000; padding-bottom: 3mm; }
-  .header-logo { text-align: left; }
-  .header-logo .company { font-size: 16px; font-weight: 700; color: #1a3a6e; }
-  .header-logo .address { font-size: 8px; color: #444; line-height: 1.4; }
-  .header-date { text-align: right; font-size: 9px; }
-  .header-date .label { color: #666; }
-  .header-date .value { font-weight: 700; font-size: 11px; border-bottom: 1px solid #000; padding-bottom: 1px; min-width: 30mm; display: inline-block; }
-  
-  .title { text-align: center; font-size: 16px; font-weight: 700; text-decoration: underline; margin: 3mm 0; }
-  
-  .sub-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2mm; font-size: 9px; }
-  .sub-header .field { display: flex; gap: 2mm; align-items: baseline; }
-  .sub-header .label { color: #555; white-space: nowrap; }
-  .sub-header .value { font-weight: 600; border-bottom: 1px solid #000; min-width: 40mm; padding-bottom: 1px; }
-  .sub-header .tapi { color: #0000cc; font-size: 8px; }
-  
-  table { width: 100%; border-collapse: collapse; font-size: 9px; }
-  td, th { border: 1px solid #000; padding: 2px 4px; vertical-align: top; }
-  .row-num { width: 6mm; text-align: center; font-size: 8px; color: #444; border-left: 1px solid #000; }
-  .row-label { width: 45%; text-align: right; background: #f5f5f5; font-size: 9px; }
-  .row-entry { width: 55%; min-height: 7mm; }
-  .row-entry.filled { font-weight: 600; color: #1a1a6e; font-size: 10px; }
-  .row-entry.tall { min-height: 14mm; }
-  
-  .circle-option { display: inline; }
-  .circle-option.selected { text-decoration: underline; font-weight: 700; }
-  
-  .footer-note { margin-top: 3mm; font-size: 8px; color: #555; text-align: center; border-top: 1px solid #ccc; padding-top: 2mm; }
-  .order-ref { font-size: 8px; color: #888; margin-top: 1mm; text-align: center; }
-  
-  @media print {
-    body { margin: 0; }
-    .page { margin: 0; padding: 8mm 10mm; width: 100%; }
-    .no-print { display: none; }
-    @page { size: A4; margin: 0; }
-  }
-  
-  .print-btn { 
-    position: fixed; top: 10px; left: 10px; z-index: 999;
-    background: #6B5CE7; color: white; border: none; 
-    padding: 10px 20px; border-radius: 8px; cursor: pointer;
-    font-family: Heebo; font-size: 14px; font-weight: 700;
-  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Heebo',Arial,sans-serif;direction:rtl;font-size:10pt;background:white;color:#000;}
+  .page{width:190mm;margin:0 auto;padding:10mm;}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3mm;}
+  .logo-area .co{font-size:18pt;font-weight:900;color:#1a3a8f;letter-spacing:1px;}
+  .logo-area .addr{font-size:7.5pt;color:#333;line-height:1.5;}
+  .date-area{text-align:right;font-size:9pt;}
+  .date-line{display:flex;align-items:baseline;gap:2mm;justify-content:flex-end;}
+  .date-line span{border-bottom:1px solid #000;min-width:35mm;display:inline-block;text-align:center;font-weight:700;}
+  .title{text-align:center;font-size:15pt;font-weight:700;text-decoration:underline;margin:3mm 0 2mm;}
+  .subheader{display:flex;justify-content:space-between;font-size:8.5pt;margin-bottom:2mm;align-items:baseline;}
+  .sh-field{display:flex;gap:1mm;align-items:baseline;}
+  .sh-val{border-bottom:1px solid #000;min-width:38mm;display:inline-block;font-weight:700;text-align:center;}
+  .tapi{color:#00c;font-size:8pt;}
+  table{width:100%;border-collapse:collapse;font-size:9pt;}
+  td,th{border:1px solid #000;padding:2px 4px;vertical-align:middle;}
+  .num{width:8mm;text-align:center;font-size:8pt;color:#444;}
+  .lbl{background:#f0f0f0;text-align:right;font-size:9pt;padding:3px 5px;}
+  .val{min-height:8mm;padding:3px 5px;}
+  .val.tall{min-height:18mm;}
+  .val.filled{color:#00008b;font-weight:700;}
+  .print-btn{position:fixed;top:10px;left:10px;background:#6B5CE7;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:13pt;font-weight:700;z-index:999;}
+  .ref{font-size:7.5pt;color:#888;text-align:center;margin-top:2mm;}
+  @media print{.print-btn{display:none;}@page{size:A4;margin:10mm;}body{margin:0;}.page{width:100%;padding:0;}}
 </style>
 </head>
 <body>
-<button class="print-btn no-print" onclick="window.print()">🖨️ הדפס / שמור PDF</button>
-
+<button class="print-btn" onclick="window.print()">🖨️ הדפס / שמור PDF</button>
 <div class="page">
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-logo">
-      <div class="company">TOSAF</div>
-      <div class="address">
-        Industry Zone M. Tnuvot<br>
-        P.O.B 52 Kfar Yona 40300<br>
-        Tel 972-9-8984684 Fax 972-9-8984645
-      </div>
-    </div>
-    <div class="header-date">
-      <div class="label">:תאריך</div>
-      <div class="value">${today}</div>
-    </div>
+
+<div class="header">
+  <div class="logo-area">
+    <div class="co">TOSAF</div>
+    <div class="addr">Industry Zone M. Tnuvot<br>P.O.B 52 Kfar Yona 40300<br>Tel 972-9-8984684 Fax 972-9-8984645</div>
   </div>
-  
-  <div class="title">טופס להזמנת פיתוח צבע</div>
-  
-  <!-- SUB HEADER -->
-  <div class="sub-header">
-    <div class="field">
-      <span class="tapi">0503902122 - תפי</span>
-      <span class="label">:איש קשר</span>
-    </div>
-    <div class="field">
-      <span class="label">1984 :זנוה</span>
-    </div>
-    <div class="field">
-      <span class="label">:שם הלקוח</span>
-      <span class="value">${order.clientName || ""}</span>
-    </div>
+  <div class="date-area">
+    <div class="date-line"><span>\${today}</span> :תאריך</div>
   </div>
-  
-  <!-- TABLE -->
-  <table>
-    <tr>
-      <td class="row-entry filled">${order.colorDescription || ""}</td>
-      <td class="row-label">:צבע מבוקש</td>
-      <td class="row-num">.1</td>
-    </tr>
-    <tr>
-      <td class="row-entry">
-        דוגמא מצורפת : כן / לא<br>
-        :PANTONE צבע: <b>${order.pantonNumber || "__________"}</b> &nbsp;&nbsp; אחר: __________
-      </td>
-      <td class="row-label">:סטנדרט</td>
-      <td class="row-num">.2</td>
-    </tr>
-    <tr>
-      <td class="row-entry">מסחרית / <u>מדויקת</u>/ מדויקת ביותר</td>
-      <td class="row-label">:סוג התאמה</td>
-      <td class="row-num">.3</td>
-    </tr>
-    <tr>
-      <td class="row-entry filled">${order.productName || ""}</td>
-      <td class="row-label">:מוצר סופי</td>
-      <td class="row-num">.4</td>
-    </tr>
-    <tr>
-      <td class="row-entry">${processDisplay || "הזרקה / ניפוח / שיחול / אחר"}</td>
-      <td class="row-label">:תהליך עיבוד</td>
-      <td class="row-num">.5</td>
-    </tr>
-    <tr>
-      <td class="row-entry" style="font-size:8px;">${polymerRow}<br>אחר: ________________<br>שילוב (שילוב בין חומרים לרוף HPP/CPP ויחסים בין השילוב): ________________</td>
-      <td class="row-label">:פולימר למוצר הסופי</td>
-      <td class="row-num">.6</td>
-    </tr>
-    <tr>
-      <td class="row-entry">כן / לא</td>
-      <td class="row-label">חו"ג מלקוח</td>
-      <td class="row-num">.7</td>
-    </tr>
-    <tr>
-      <td class="row-entry">1/2/3/4/5/<u>6</u>/7/8</td>
-      <td class="row-label">עמידות לאור</td>
-      <td class="row-num">.8</td>
-    </tr>
-    <tr>
-      <td class="row-entry">260</td>
-      <td class="row-label">טמפ׳ תהליך</td>
-      <td class="row-num">.9</td>
-    </tr>
-    <tr>
-      <td class="row-entry">1/2/3/4/5</td>
-      <td class="row-label">עמידות חיצונית</td>
-      <td class="row-num">.10</td>
-    </tr>
-    <tr>
-      <td class="row-entry" style="min-height:16mm;">
-        לא | כן<br>
-        רגולציות נדרשות:<br>
-        EC/FDA / AP(89)1 / BFR : מזון<br>
-        אישור צצצועים<br>
-        הערד מתכות כבדות / ROHS<br>
-        אחר: ________________
-      </td>
-      <td class="row-label">:אישור מגע עם מזון</td>
-      <td class="row-num">.11</td>
-    </tr>
-    <tr>
-      <td class="row-entry" style="min-height:14mm;">
-        כן / לא<br>
-        במידה וכן יש לציין:<br>
-        עובי מוצר (מ"מ)- ________<br>
-        אחוז חשיפה בעולם - ________<br>
-        זמן הגנה נדרש (שנים)- ________
-      </td>
-      <td class="row-label">:תוספת הגנת UV</td>
-      <td class="row-num">.12</td>
-    </tr>
-    <tr>
-      <td class="row-entry">1/<u>2</u>/3/4/5 אחר: ________________</td>
-      <td class="row-label">:אחוז שימוש נדרש</td>
-      <td class="row-num">.13</td>
-    </tr>
-    <tr>
-      <td class="row-entry filled">${sampleQty}</td>
-      <td class="row-label">:כמות ניסיונית למשלוח</td>
-      <td class="row-num">.14</td>
-    </tr>
-    <tr>
-      <td class="row-entry tall filled">${order.notes || ""}</td>
-      <td class="row-label">:הערות</td>
-      <td class="row-num">.15</td>
-    </tr>
-  </table>
-  
-  <div class="footer-note">טופס זה הופק אוטומטית ממערכת Color Orders</div>
-  <div class="order-ref">מס׳ הזמנה: ${order.serial} | פרויקט: ${order.projectName||""} | מוצר: ${order.productName||""}</div>
+</div>
+
+<div class="title">טופס להזמנת פיתוח צבע</div>
+
+<div class="subheader">
+  <div class="sh-field"><span class="tapi">0503902122 - תפי</span>&nbsp;&nbsp;:איש קשר</div>
+  <div class="sh-field">1984 :זנוה</div>
+  <div class="sh-field">:שם הלקוח &nbsp;<span class="sh-val">זנוה 1984</span></div>
+</div>
+
+<table>
+<tr>
+  <td class="val filled">\${order.colorDescription||""}</td>
+  <td class="lbl">:צבע מבוקש</td>
+  <td class="num">.1</td>
+</tr>
+<tr>
+  <td class="val">
+    דוגמא מצורפת : \${order.hasSample==="כן" ? "<b>כן</b> / לא" : "כן / <b>לא</b>"}<br>
+    :PANTONE &nbsp; צבע: <b>\${order.pantonNumber||"__________"}</b> &nbsp;&nbsp; אחר: __________
+  </td>
+  <td class="lbl">:סטנדרט</td>
+  <td class="num">.2</td>
+</tr>
+<tr>
+  <td class="val">מסחרית / <u>מדויקת</u> / מדויקת ביותר</td>
+  <td class="lbl">:סוג התאמה</td>
+  <td class="num">.3</td>
+</tr>
+<tr>
+  <td class="val filled">\${order.productName||""}</td>
+  <td class="lbl">:מוצר סופי</td>
+  <td class="num">.4</td>
+</tr>
+<tr>
+  <td class="val">
+    \${isPET
+      ? "הזרקה / שיחול / <b>קאסט</b> / אחר"
+      : "<b>הזרקה</b> / <b>ניפוח</b> / שיחול / תרמופורמינג / קאסט / אחר"}
+    \${order.threading ? "<br><b>" + order.threading + "</b>" : ""}
+  </td>
+  <td class="lbl">:תהליך עיבוד</td>
+  <td class="num">.5</td>
+</tr>
+<tr>
+  <td class="val" style="font-size:8.5pt;line-height:1.6;">
+    \${isPET
+      ? "HPP / CPP / RPP / PE / PVC-RIGID / PVC-FLEX / PSCR / HIPS/<br>PMMA SAN / ABS / PC /PA /POM / <u><b>PET</b></u>/ PBT"
+      : "HPP / CPP / RPP / <u><b>PE</b></u>/ PVC-RIGID / PVC-FLEX / PSCR / HIPS/<br>PMMA SAN / ABS / PC /PA /POM / PET / PBT"}
+    <br>אחר: ________________<br>
+    שילוב (שילוב בין חומרים לרוף HPP/CPP ויחסים בין השילוב): ________________
+  </td>
+  <td class="lbl">:פולימר למוצר הסופי</td>
+  <td class="num">.6</td>
+</tr>
+<tr>
+  <td class="val">כן / לא</td>
+  <td class="lbl">חו"ג מלקוח</td>
+  <td class="num">.7</td>
+</tr>
+<tr>
+  <td class="val">1/2/3/4/5/<u>6</u>/7/8</td>
+  <td class="lbl" style="font-size:8pt;">עמידות לאור<br>(מתייחסת לעמידות הצבע לדהייה עקב חשיפה לאור בלבד ללא קשר למזג האוויר, סקלה נמדדת בין 1 נמוך ביותר ל- 8 גבוה ביותר)</td>
+  <td class="num">.8</td>
+</tr>
+<tr>
+  <td class="val">260</td>
+  <td class="lbl" style="font-size:8pt;">טמפ׳ תהליך<br>(מתייחסת לטמפ׳ מקסימלית בתהליך העבודה)</td>
+  <td class="num">.9</td>
+</tr>
+<tr>
+  <td class="val">1/2/3/4/5</td>
+  <td class="lbl" style="font-size:8pt;">עמידות חיצונית<br>(מתייחסת לעמידות הצבע לדהייה עקב חשיפה חיצונית: מזג אוויר אוויר קיצוניים; חום, קור,לחות וכד׳. סקלה נמדדת בין 1 נמוך ביותר- 5 גבוה ביותר)</td>
+  <td class="num">.10</td>
+</tr>
+<tr>
+  <td class="val" style="min-height:20mm;">
+    לא &nbsp;|&nbsp; כן<br>
+    רגולציות נדרשות:<br>
+    EC/FDA / AP(89)1 / BFR : מזון<br>
+    אישור צצצועים<br>
+    הערד מתכות כבדות / ROHS<br>
+    אחר: ________________
+  </td>
+  <td class="lbl">:אישור מגע עם מזון</td>
+  <td class="num">.11</td>
+</tr>
+<tr>
+  <td class="val" style="min-height:18mm;">
+    כן / <u>לא</u><br>
+    במידה וכן יש לציין:<br>
+    עובי מוצר (מ"מ)- ________<br>
+    אחוז חשיפה בעולם - ________<br>
+    זמן הגנה נדרש (שנים)- ________
+  </td>
+  <td class="lbl">:תוספת הגנת UV</td>
+  <td class="num">.12</td>
+</tr>
+<tr>
+  <td class="val">1/<u>2</u>/3/4/5 &nbsp; אחר: ________________</td>
+  <td class="lbl" style="font-size:8pt;">:אחוז שימוש נדרש<br>(אחוז סופי יוחלץ בסיום פיתוח התרכיז בהתאם לאפקט גוון הנדרש)</td>
+  <td class="num">.13</td>
+</tr>
+<tr>
+  <td class="val filled">\${isPET ? "2 ק״ג" : "1 ק״ג"}</td>
+  <td class="lbl" style="font-size:8pt;">:כמות ניסיונית למשלוח (ק"ג)<br>(לדוגמה: התאמות עבור ABS מיועדות תמיד ל-5% שימוש, יריעות פילם 5%)</td>
+  <td class="num">.14</td>
+</tr>
+<tr>
+  <td class="val tall filled">\${order.notes||""}</td>
+  <td class="lbl">:הערות</td>
+  <td class="num">.15</td>
+</tr>
+</table>
+
+<div class="ref">מס׳ הזמנה: \${order.serial} | \${order.distributorName||""} | \${order.projectName||""}</div>
 </div>
 </body>
 </html>`;
 }
-
 function openFormForOrder(order) {
   const formType = detectFormType(order);
   const html = generateFormHTML(order, formType);
   const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank');
+}
+
+
+// ── ARCHIVE SHEETS SYNC ───────────────────────────────────────
+async function syncToArchive(order) {
+  if (!ARCHIVE_URL) return;
+  try {
+    await fetch(ARCHIVE_URL, {
+      method: "POST", redirect: "follow",
+      headers: {"Content-Type": "text/plain"},
+      body: JSON.stringify({action: "upsert", order})
+    });
+  } catch(e) { console.error("Archive sync error:", e); }
+}
+
+async function syncAllToArchive() {
+  if (!ARCHIVE_URL) return;
+  try {
+    await fetch(ARCHIVE_URL, {
+      method: "POST", redirect: "follow",
+      headers: {"Content-Type": "text/plain"},
+      body: JSON.stringify({action: "syncAll", orders: state.orders})
+    });
+  } catch(e) { console.error("Archive sync all error:", e); }
 }
 
 async function init(){
